@@ -140,6 +140,17 @@ module OSM
       db
     end
     
+    # Get a changeset with specified ID from OpenstreetMap API
+    #
+    # call-seq: get_changeset(id) -> OSM::Changeset
+    #
+    def get_changeset(id)
+      raise TypeError.new('id needs to be a positive integer') unless(id.kind_of?(Fixnum) && id > 0)
+      response = get("changeset/#{id}")
+      check_response_codes(response)
+      OSM::Changeset.from_osm_xml(response.body)
+    end
+    
     private
     
     def api_call_with_type(type, id, path)
