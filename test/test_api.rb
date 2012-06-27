@@ -120,7 +120,7 @@ class MockHTTPResponse
       @body = %q{<?xml version="1.0" encoding="UTF-8"?>
         <osm version="0.6" generator="OpenStreetMap server">
         <changeset id="1" user="u" uid="1" created_at="2011-05-18T12:38:17Z" closed_at="2011-05-18T12:38:19Z" open="false" min_lat="46.7733159" min_lon="23.5928252" max_lat="46.7733159" max_lon="23.5928252">
-        <tag k="comment" v="Addressdust - address Number "/>
+        <tag k="comment" v="Added street names"/>
         <tag k="created_by" v="Addressdust 0.1"/>
         </changeset>
         </osm>
@@ -301,6 +301,38 @@ class TestAPI < Test::Unit::TestCase
     assert_equal "48.1", db.get_node(1).lat
     assert_equal "8.2", db.get_node(2).lon
   end
+  
+  def test_get_changeset_fail
+    assert_raise TypeError do
+      @mapi.get_changeset(-11)
+    end    
+
+    assert_raise TypeError do
+      @mapi.get_changeset(0)
+    end    
+
+    assert_raise TypeError do
+      @mapi.get_changeset("as")
+    end    
+    
+  end
+
+  def test_get_changeset_id_1
+    changeset = @mapi.get_changeset(1)
+
+    assert_kind_of OSM::Changeset, changeset
+    assert_equal 1, changeset.id
+    assert_equal 'u', changeset.user
+    assert_equal 1, changeset.uid 
+    assert_equal "2011-05-18T12:38:17Z", changeset.created_at 
+    assert_equal "2011-05-18T12:38:19Z", changeset.closed_at
+    assert_equal false,  changeset.open
+    assert_equal 46.7733159, changeset.min_lat
+    assert_equal 23.5928252, changeset.min_lon
+    assert_equal 46.7733159, changeset.max_lat
+    assert_equal 23.5928252, changeset.max_lon    
+  end
+  
 
 end
 

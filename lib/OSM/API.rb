@@ -3,6 +3,7 @@
 require 'net/http'
 require 'OSM'
 require 'OSM/objects'
+require 'OSM/Changeset'
 require "OSM/StreamParser"
 
 module OSM
