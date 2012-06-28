@@ -7,33 +7,33 @@ require 'OSM/Changeset'
 require "OSM/StreamParser"
 
 module OSM
-  
+
   # Unspecified OSM API error.
   class APIError < StandardError; end
-  
+
   # The API returned more than one OSM object where it should only
   # have returned one.
   class APITooManyObjects < APIError; end
-  
+
   # The API returned HTTP 400 (Bad Request).
   class APIBadRequest < APIError; end # 400
 
   # The API operation wasn't authorized. This happens if you didn't
   # set the user and password for a write operation.
   class APIUnauthorized < APIError; end # 401
-  
+
   # The object was not found (HTTP 404). Generally means that the
   # object doesn't exist and never has.
   class APINotFound < APIError; end # 404
-  
+
   # The object was not found (HTTP 410), but it used to exist. This
   # generally means that the object existed at some point, but was
   # deleted.
   class APIGone < APIError; end # 410
-  
+
   # Unspecified API server error.
   class APIServerError < APIError; end # 500
-  
+
   # The OSM::API class handles all calls to the OpenStreetMap API.
   #
   # Usage:
@@ -46,17 +46,25 @@ module OSM
   # OSM::Node, OSM::Way, or OSM::Relation objects.
   #
   class API
-    
+
     # the default base URI for the API
     DEFAULT_BASE_URI = 'http://www.openstreetmap.org/api/0.6/'
+    
+    attr_reader :username
+    attr_reader :password
     
     # Creates a new API object. Without any arguments it uses the
     # default API at DEFAULT_BASE_URI. If you want to use a different
     # API, give the base URI as parameter to this method.
-    def initialize(uri=DEFAULT_BASE_URI)
+    def initialize( uri = DEFAULT_BASE_URI, username = nil, password = nil )
+
       @base_uri = uri
+      @username = username 
+      @password = password 
     end
-    
+
+
+
     # Get an object ('node', 'way', or 'relation') with specified ID
     # from API.
     #
@@ -72,7 +80,7 @@ module OSM
       raise APITooManyObjects if list.size > 1
       list[0]
     end
-    
+
     # Get a node with specified ID from API.
     #
     # call-seq: get_node(id) -> OSM::Node
@@ -80,7 +88,7 @@ module OSM
     def get_node(id)
       get_object('node', id)
     end
-    
+
     # Get a way with specified ID from API.
     #
     # call-seq: get_node(id) -> OSM::Way
@@ -88,7 +96,7 @@ module OSM
     def get_way(id)
       get_object('way', id)
     end
-    
+
     # Get a relation with specified ID from API.
     #
     # call-seq: get_node(id) -> OSM::Relation
@@ -96,7 +104,7 @@ module OSM
     def get_relation(id)
       get_object('relation', id)
     end
-    
+
     # Get all ways using the node with specified ID from API.
     #
     # call-seq: get_ways_using_node(id) -> Array of OSM::Way
@@ -104,7 +112,7 @@ module OSM
     def get_ways_using_node(id)
       api_call(id, "node/#{id}/ways")
     end
-    
+
     # Get all relations which refer to the object of specified type and with specified ID from API.
     #
     # call-seq: get_relations_referring_to_object(type, id) -> Array
@@ -113,7 +121,7 @@ module OSM
     def get_relations_referring_to_object(type, id)
       api_call_with_type(type, id, "#{type}/#{id}/relations")
     end
-    
+
     # Get all historic versions of an object of specified type and
     # with specified ID from API.
     #
@@ -122,7 +130,7 @@ module OSM
     def get_history(type, id)
       api_call_with_type(type, id, "#{type}/#{id}/history")
     end
-    
+
     # Get all objects in the bounding box (bbox) given by the left, bottom, right, and top
     # parameters. They will be put into a OSM::Database object which is returned.
     #
@@ -140,25 +148,36 @@ module OSM
       parser.parse
       db
     end
-    
+
     # Get a changeset with specified ID from OpenstreetMap API
     #
     # call-seq: get_changeset(id) -> OSM::Changeset
     #
     def get_changeset(id)
-      raise TypeError.new('id needs to be a positive integer') unless(id.kind_of?(Fixnum) && id > 0)
+      raise TypeError.new('id needs to be a positive integer') unless(id.kind_of?(Integer) && id > 0)
       response = get("changeset/#{id}")
       check_response_codes(response)
       OSM::Changeset.from_osm_xml(response.body)
     end
-    
+
+    # Opens a changeset and returns its id. Tags for changeset is not implemented yet.
+    #
+    # call-seq: create_changeset( tags={} ) -> int
+    #
+    def create_changeset(tags = {})
+      osm_xml = OSM::Changeset.osm_xml_for_new_changeset(tags)
+      response = put('changeset/create', osm_xml)
+      check_response_codes(response)
+      response
+    end
+
     private
-    
+
     def api_call_with_type(type, id, path)
       raise ArgumentError.new("type needs to be one of 'node', 'way', and 'relation'") unless type =~ /^(node|way|relation)$/
       api_call(id, path)
     end
-    
+
     def api_call(id, path)
       raise TypeError.new('id needs to be a positive integer') unless(id.kind_of?(Fixnum) && id > 0)
       response = get(path)
@@ -166,13 +185,13 @@ module OSM
       parser = OSM::StreamParser.new(:string => response.body, :callbacks => OSM::ObjectListCallbacks.new)
       parser.parse
     end
-    
+
     def get(suffix)
       uri = URI.parse(@base_uri + suffix)
       request = Net::HTTP.new(uri.host, uri.port)
       request.get(uri.request_uri)
     end
-    
+
     def check_response_codes(response)
       case response.code.to_i
       when 200 then return
@@ -182,7 +201,7 @@ module OSM
       else raise APIError
       end
     end
-    
+
   end
-  
+
 end

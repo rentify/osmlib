@@ -6,7 +6,7 @@ require 'net/http'
 
 # This is a mock class that pretends to be a Net::HTTPResponse. It is called from some of the
 # tests to fake the network interaction with the server.
-class MockHTTPResponse
+class MockHTTPGetResponse
 
   attr_reader :code, :body
 
@@ -125,12 +125,35 @@ class MockHTTPResponse
         </changeset>
         </osm>
       }
-      
+
     else
       raise ArgumentError.new("unknown parameter: '#{suffix}'")
     end
   end
 
+end
+
+class MockHTTPPutResponse
+
+  attr_reader :code, :body
+
+  def initialize( suffix, put_data )
+    case suffix
+    when 'changeset/create'
+
+      # Using a fixed osm xml for changeset creation to easier testing
+      expected_put_data = %q{<?xml version='1.0' encoding='UTF-8'?><osm><changeset><tag k='created_by' v='my app'/><tag k='comments' v='added some points'/></changeset></osm>}
+      if (put_data == expected_put_data )
+        @code = 200
+        @body = '1' # return changeset number
+      else
+        @code = 400 # bad request
+        @body = ''
+      end
+    else
+      raise ArgumentError.new("unknown parameter: '#{suffix}'")
+    end
+  end
 end
 
 class TestAPI < Test::Unit::TestCase
@@ -140,7 +163,10 @@ class TestAPI < Test::Unit::TestCase
 
     @mapi = OSM::API.new('http://mock/')
     def @mapi.get(suffix)
-      MockHTTPResponse.new(suffix)
+      MockHTTPGetResponse.new(suffix)
+    end
+    def @mapi.put(suffix, put_data)
+      MockHTTPPutResponse.new(suffix, put_data)
     end
   end
 
@@ -301,7 +327,13 @@ class TestAPI < Test::Unit::TestCase
     assert_equal "48.1", db.get_node(1).lat
     assert_equal "8.2", db.get_node(2).lon
   end
-  
+
+  def test_create_changeset
+    response = @mapi.create_changeset({ "created_by" => "my app", "comments" => "added some points"})
+    changeset_id = response.body.to_i
+    assert changeset_id > 0
+  end
+
   def test_get_changeset_fail
     assert_raise TypeError do
       @mapi.get_changeset(-11)
@@ -314,7 +346,7 @@ class TestAPI < Test::Unit::TestCase
     assert_raise TypeError do
       @mapi.get_changeset("as")
     end    
-    
+
   end
 
   def test_get_changeset_id_1
@@ -332,7 +364,7 @@ class TestAPI < Test::Unit::TestCase
     assert_equal 46.7733159, changeset.max_lat
     assert_equal 23.5928252, changeset.max_lon    
   end
-  
+
 
 end
 

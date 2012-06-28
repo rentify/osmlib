@@ -26,6 +26,16 @@ module OSM
                           osm_hash["max_lon"])
     end
     
+    # Generate xml for changeset creation
+    def self.osm_xml_for_new_changeset (tags = {})
+      result =  "<?xml version='1.0' encoding='UTF-8'?>"
+      result += "<osm><changeset>"
+      tags.each { |key, value|
+        result += "<tag k='#{key}' v='#{value}'/>"
+      }
+      result += "</changeset></osm>"
+    end
+    
     # Attributes
     
     attr_reader :id
