@@ -1,8 +1,15 @@
 #!/usr/bin/env rake
 require "bundler/gem_tasks"
+require 'rake/testtask'
 
-desc 'Measures test coverage'
-task :rcov do
-  rm_f "coverage"
-  system("rcov test/test_*rb")
+$: << 'lib'
+
+require 'OSM'
+
+task :default => :test
+
+desc "Run the tests"
+Rake::TestTask::new do |t|
+  t.test_files = FileList['test/test_*.rb']
+  t.verbose = true
 end
