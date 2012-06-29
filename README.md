@@ -1,28 +1,10 @@
+== OSM Library - Base
 
-= OSM Library - Base
+A library for handling OpenStreetMap data and API.
 
-A library for handling OpenStreetMap data.
+=== Summary
 
-== License
-
-This work is released into the public domain. This applies worldwide.
-In case this is not legally possible, any entity is granted the right
-to use this work for any purpose, without any conditions, unless such
-conditions are required by law.
-
-== Author
-
-Jochen Topf <jochen@topf.org>
-Serge Wroclawski <serge+osmlib@wroclawski.org>
-
-== Web
-
-For more information see the OSM Library home page at
-http://osmlib.rubyforge.org/ or the Rubyforge project page at
-http://rubyforge.org/projects/osmlib/ . The OpenStreetMap project can
-be found at http://www.openstreetmap.org/ .
-
-== Dependencies
+=== Dependencies
 
 * georuby (gem install GeoRuby)
 * libxml-ruby (optional C-based XML parser, needs reasonably new version)
@@ -33,6 +15,16 @@ be found at http://www.openstreetmap.org/ .
 Dependencies are not all installed automatically when installing the gem
 packages because this breaks when the packages are already installed as
 Debian packages.
+
+=== Instalation
+
+== Web
+
+For more information see the OSM Library home page at
+http://osmlib.rubyforge.org/ or the Rubyforge project page at
+http://rubyforge.org/projects/osmlib/ . The OpenStreetMap project can
+be found at http://www.openstreetmap.org/ .
+
 
 == Usage
 
@@ -224,3 +216,15 @@ variable:
   OSMLIB_XML_PARSER=Libxml rake test
   OSMLIB_XML_PARSER=Expat rake test
 
+  === Authors
+
+  Jochen Topf <jochen@topf.org> 
+  Serge Wroclawski <serge+osmlib@wroclawski.org>
+
+
+  === License
+
+  This work is released into the public domain. This applies worldwide.
+  In case this is not legally possible, any entity is granted the right
+  to use this work for any purpose, without any conditions, unless such
+  conditions are required by law.

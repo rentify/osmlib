@@ -1,9 +1,5 @@
-module OSM
 
-    VERSION = '0.1.6'
-
-end
-
+require 'OSM/version'
 require 'OSM/core/object'
 require 'OSM/core/tags'
 require 'OSM/core/node'
