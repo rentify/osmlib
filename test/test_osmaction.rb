@@ -1,5 +1,5 @@
 $: << 'lib'
-require File.join(File.dirname(__FILE__), '..', 'lib', 'OSM', 'objects')
+require File.join(File.dirname(__FILE__), '..', 'lib', 'osm',  'osmchange_format', 'action')
 require 'test/unit'
 
 class TestAction < Test::Unit::TestCase

@@ -1,5 +1,5 @@
 $: << 'lib'
-require File.join(File.dirname(__FILE__), '..', 'lib', 'OSM', 'Database')
+require File.join(File.dirname(__FILE__), '..', 'lib', 'osm',  'database', 'database')
 require 'test/unit'
 
 class TestDatabase < Test::Unit::TestCase

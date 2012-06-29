@@ -1,5 +1,5 @@
 $: << 'lib'
-require File.join(File.dirname(__FILE__), '..', 'lib', 'OSM', 'objects')
+require File.join(File.dirname(__FILE__), '..', 'lib', 'osm',  'core', 'object')
 require 'test/unit'
 require 'rubygems'
 require 'geo_ruby'

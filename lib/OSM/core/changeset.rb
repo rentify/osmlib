@@ -13,7 +13,6 @@ module OSM
     # Instanciate a OSM::Changetset from a Hash
     def self.from_osm_xml( osm_xml ) 
       osm_hash = XmlSimple.xml_in( osm_xml )["changeset"][0]
-      # p osm_hash
       OSM::Changeset.new( osm_hash["id"].to_i, 
                           osm_hash["user"], 
                           osm_hash["uid"].to_i, 
@@ -60,7 +59,7 @@ module OSM
       @min_lon = min_lon.to_f
       @max_lat = max_lat.to_f
       @max_lon = max_lon.to_f
-      @tags = Tags.new      
+      @tags = OSM::Tags.new      
     end
     
   end
