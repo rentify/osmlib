@@ -1,7 +1,6 @@
 # Contains the OSM::API class
 
 require 'net/http'
-require 'OSM'
 
 module OSMLib
 
@@ -18,7 +17,7 @@ module OSMLib
     # In most cases you can use the more convenient methods on the
     # OSM::Node, OSM::Way, or OSM::Relation objects.
     #
-    class API
+    class Client
 
       # the default base URI for the API
       DEFAULT_BASE_URI = 'http://www.openstreetmap.org/api/0.6/'
