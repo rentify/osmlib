@@ -2,8 +2,6 @@
 
 A library for handling OpenStreetMap data and API.
 
-=== Summary
-
 === Dependencies
 
 * georuby (gem install GeoRuby)
@@ -15,8 +13,6 @@ A library for handling OpenStreetMap data and API.
 Dependencies are not all installed automatically when installing the gem
 packages because this breaks when the packages are already installed as
 Debian packages.
-
-=== Instalation
 
 == Web
 
