@@ -20,11 +20,11 @@ module OSMLib
 end
 
 
-require 'OSM/version'
-require 'OSM/element/object'
-require 'OSM/element/tags'
-require 'OSM/element/node'
-require 'OSM/element/way'
-require 'OSM/element/relation'
-require 'OSM/element/changeset'
-require "OSM/stream_parser/stream_parser"
+require 'osmlib/version'
+require 'osmlib/element/object'
+require 'osmlib/element/tags'
+require 'osmlib/element/node'
+require 'osmlib/element/way'
+require 'osmlib/element/relation'
+require 'osmlib/element/changeset'
+require "osmlib/stream_parser/stream_parser"
