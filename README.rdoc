@@ -14,39 +14,29 @@ Dependencies are not all installed automatically when installing the gem
 packages because this breaks when the packages are already installed as
 Debian packages.
 
-== Web
-
-For more information see the OSM Library home page at
-http://osmlib.rubyforge.org/ or the Rubyforge project page at
-http://rubyforge.org/projects/osmlib/ . The OpenStreetMap project can
-be found at http://www.openstreetmap.org/ .
-
-
-== Usage
-
-=== Basic OSM Objects
+=== Basic Usage
 
 The library provides classes for the three basic building blocks of any
-OSM database: OSM::Node, OSM::Way, and OSM::Relation. They are all subclasses
-of OSM::OSMObject.
+OSM database: OSMLib::Element::Node, OSMLib::Element::Way, and OSMLib::Element::Relation. They are all subclasses
+of OSMLib::Element::Object.
 
   # support for basic OSM objects
-  require 'OSM/objects'
+  require 'osmlib'
 
   # create a node
-  node = OSM::Node.new(17, 'user', '2007-10-31T23:48:54Z', 7.4, 53.2)
+  node = OSMLib::Element::Node.new(17, 'user', '2007-10-31T23:48:54Z', 7.4, 53.2)
 
   # create a way and add a node
-  way = OSM::Way.new(1743, 'user', '2007-10-31T23:51:17Z')
+  way = OSMLib::Element::Way.new(1743, 'user', '2007-10-31T23:51:17Z')
   way.nodes << node
 
   # create a relation
-  relation = OSM::Relation.new(331, 'user', '2007-10-31T23:51:53Z')
+  relation = OSMLib::Element::Relation.new(331, 'user', '2007-10-31T23:51:53Z')
 
-There is also an OSM::Member class for members of a relation:
+There is also an OSMLib::Element::Member class for members of a relation:
 
   # create a member and add it to a relation
-  member = OSM::Member.new('way', 1743, 'role')
+  member = OSMLib::Element::Member.new('way', 1743, 'role')
   relation << [member]
 
 Tags can be added to Nodes, Ways, and Relations:
@@ -65,21 +55,21 @@ As a convenience tags can also be accessed with their name only:
 This is implemented with the method_missing() function. Of course it
 only works for tag keys which are allowed as ruby method names.
 
-There is also an OSM::Change object which can be used to store
+There is also an OSMLib::OSMChange::Change object which can be used to store
 OSM data as it would appear in an OSMChange file.
 
-  change = OSM::Change.new
+  change = OSMLib::OSMChange::Change.new
 
-OSM::Change objects consist of OSM::Action objects, which contain a
+OSMLib::OSMChange::Change objects consist of OSMLib::OSMChange::Action objects, which contain a
 single action as well as one or more Node, Way or Relation. An action
 must be created with an action keyword :create, :modify, or :delete)
 
-  node = OSM::Node.new(17, 'user', '2007-10-31T23:48:54Z', 7.4, 53.2)
-  action = OSM::Action.new(:create)
+  node = OSMLib::Element::Node.new(17, 'user', '2007-10-31T23:48:54Z', 7.4, 53.2)
+  action = OSMLib::OSMChange::Action.new(:create)
   action.push(node)
 
-OSM::Change objects have two relevant methods, .actions, which returns
-an Array of OSM::Actions, and objects, which returns all the objects
+OSMLib::OSMChange::Change objects have two relevant methods, .actions, which returns
+an Array of OSMLib::OSMChange::Actions, and objects, which returns all the objects
 in all the actions.
 
    actions = change.actions
@@ -87,8 +77,8 @@ in all the actions.
 
 === Accessing the OSM API
 
-You can access the OSM RESTful web API through the OSM::API class
-and through some methods in the OSM::Node, OSM::Way, and OSM::Relation
+You can access the OSM RESTful web API through the OSMLib::API::Client class
+and through some methods in the OSMLib::Element::Node, OSMLib::Element::Way, and OSMLib::Element::Relation
 classes.
 
 There are methods for getting Nodes, Ways, and Relations by ID,
@@ -97,14 +87,14 @@ getting the history of an object etc.
 Currently only read access is implemented, write access will follow
 in a later version.
 
-See the OSM::API class for details.
+See the OSMLib::API::Client class for details.
 
 === The Stream Parser
 
-To parse an OSM XML file create a subclass of OSM::Callbacks and
+To parse an OSM XML file create a subclass of OSMLib::Stream::Callbacks and
 define the methods node(), way(), and relation() in it:
 
-  class MyCallbacks < OSM::Callbacks
+  class MyCallbacks < OSMLib::Stream::Callbacks
 
     def node(node)
        ...
@@ -120,12 +110,12 @@ define the methods node(), way(), and relation() in it:
 
   end
 
-Instantiate an object of this class and give it to a OSM::StreamParser:
+Instantiate an object of this class and give it to a OSMLib::Stream::Parser:
 
-  require 'OSM/StreamParser'
+  require 'osmlib'
 
   cb = MyCallbacks.new
-  parser = OSM::StreamParser.new(:filename => 'filename.osm', :callbacks => cb)
+  parser = OSMLib::Stream::Parser.new(:filename => 'filename.osm', :callbacks => cb)
   parser.parse
 
 The methods node(), way(), or relation() will be called whenever
@@ -150,23 +140,23 @@ From the shell:
 
 From ruby:
     ENV['OSMLIB_XML_PARSER']='Libxml'
-    require 'OSM/StreamParser'
+    require 'osmlib'
 
 === Using a Database
 
 If you want the parser to keep track of all the objects it finds in
-the XML file you can create a OSM::Database for it:
+the XML file you can create a OSMLib::Database for it:
 
-  require 'OSM/Database'
+  require 'osmlib'
 
-  db = OSM::Database.new
+  db = OSMLib::Database.new
 
 The database lives in memory so this works only if the XML file is
 not too big.
 
 When creating the parser you can give it the database object:
 
-  parser = OSM::StreamParser.new(:filename => 'filename.osm', :db => db)
+  parser = OSMLib::Stream::Parser.new(:filename => 'filename.osm', :db => db)
 
 In your node(), way(), and relation() methods you now have to return
 +true+ if you want this object to be stored in the database and +false+
@@ -212,13 +202,13 @@ variable:
   OSMLIB_XML_PARSER=Libxml rake test
   OSMLIB_XML_PARSER=Expat rake test
 
-  === Authors
+=== Authors
 
   Jochen Topf <jochen@topf.org> 
   Serge Wroclawski <serge+osmlib@wroclawski.org>
+  Vitor George <vitor.george@gmail.com>
 
-
-  === License
+=== License
 
   This work is released into the public domain. This applies worldwide.
   In case this is not legally possible, any entity is granted the right
