@@ -34,5 +34,30 @@ module OSMLib
     # Unspecified API server error.
     class APIServerError < APIError; end # 500
 
+    # This error is raised when an object is not associated with a
+    # OSMLib::Database but database access is needed.
+    class NoDatabaseError < StandardError
+    end
+
+    # This error is raised when a way that should be closed (i.e.
+    # first node equals last node) but isn't.
+    class NotClosedError < StandardError
+    end
+
+    # This error is raised when an OSM object is not associated with a
+    # geometry.
+    class NoGeometryError < StandardError
+    end
+
+    # This error is raised when an OSM object can't be turned into
+    # a proper geometry. Happens if way has not enough nodes.
+    class GeometryError < StandardError
+    end
+
+    # An object was not found in the database.
+    class NotFoundError < StandardError
+    end
+
+
   end
 end

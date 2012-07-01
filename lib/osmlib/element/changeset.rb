@@ -2,19 +2,19 @@ require 'xmlsimple'
 
 # Namespace for modules and classes related to the OpenStreetMap project.
 module OSMLib
-  module Elements
+  module Element
 
     class Changeset
 
-      # Get OSM::Changeset from API
-      def self.from_api(id, api = OSM::API.new) 
+      # Get OSMLib::Element::Changeset from API
+      def self.from_api(id, api = OSMLib::API::Client.new) 
         api.get_changeset(id)
       end
 
-      # Instanciate a OSM::Changetset from a Hash
+      # Instanciate a OSMLib::Element::Changetset from a Hash
       def self.from_osm_xml( osm_xml ) 
         osm_hash = XmlSimple.xml_in( osm_xml )["changeset"][0]
-        OSM::Changeset.new( osm_hash["id"].to_i, 
+        OSMLib::Element::Changeset.new( osm_hash["id"].to_i, 
         osm_hash["user"], 
         osm_hash["uid"].to_i, 
         osm_hash["created_at"], 
@@ -60,7 +60,7 @@ module OSMLib
         @min_lon = min_lon.to_f
         @max_lat = max_lat.to_f
         @max_lon = max_lon.to_f
-        @tags = OSM::Tags.new      
+        @tags = OSMLib::Element::Tags.new      
       end
 
     end

@@ -22,7 +22,7 @@ module OSMLib
       end
 
       def push(object)
-        if object.class == Node or object.class == Way or object.class == Relation
+        if object.class == OSMLib::Element::Node or object.class == OSMLib::Element::Way or object.class == OSMLib::Element::Relation
           @objects.push object
         else
           raise TypeError.new("Object must be Node, Way or Relation")

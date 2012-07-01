@@ -1,36 +1,36 @@
 $: << 'lib'
-require File.join(File.dirname(__FILE__), '..', 'lib', 'osm',  'database', 'database')
 require 'test/unit'
+require 'osmlib'
 
 class TestDatabase < Test::Unit::TestCase
 
     def setup
-        @db = OSM::Database.new
+        @db = OSMLib::Database.new
     end
 
     def test_create
-        assert_kind_of OSM::Database, @db
+        assert_kind_of OSMLib::Database, @db
         @db.version = '0.5'
         assert_equal '0.5', @db.version
     end
 
     def test_adding
-        node = OSM::Node.new(1)
+        node = OSMLib::Element::Node.new(1)
         @db.add_node(node)
         assert_equal node, @db.get_node(1)
         assert_equal @db, node.db
 
-        way = OSM::Way.new(17)
+        way = OSMLib::Element::Way.new(17)
         @db.add_way(way)
         assert_equal way, @db.get_way(17)
         assert_equal @db, way.db
 
-        relation = OSM::Relation.new(21)
+        relation = OSMLib::Element::Relation.new(21)
         @db.add_relation(relation)
         assert_equal relation, @db.get_relation(21)
         assert_equal @db, relation.db
 
-        node1 = OSM::Node.new(42)
+        node1 = OSMLib::Element::Node.new(42)
         @db << node1
         assert_equal node1, @db.get_node(42)
         assert_equal @db, node1.db
@@ -51,10 +51,10 @@ class TestDatabase < Test::Unit::TestCase
     end
 
     def test_adding_multiple
-        @db << OSM::Node.new(1) << OSM::Node.new(2) << OSM::Way.new(3)
-        assert_kind_of OSM::Node, @db.get_node(1)
-        assert_kind_of OSM::Node, @db.get_node(2)
-        assert_kind_of OSM::Way,  @db.get_way(3)
+        @db << OSMLib::Element::Node.new(1) << OSMLib::Element::Node.new(2) << OSMLib::Element::Way.new(3)
+        assert_kind_of OSMLib::Element::Node, @db.get_node(1)
+        assert_kind_of OSMLib::Element::Node, @db.get_node(2)
+        assert_kind_of OSMLib::Element::Way,  @db.get_way(3)
     end
 
     def test_adding_unknown_object
@@ -64,43 +64,43 @@ class TestDatabase < Test::Unit::TestCase
     end
 
     def test_overwrite_node
-        node1 = OSM::Node.new(89)
+        node1 = OSMLib::Element::Node.new(89)
         @db.add_node(node1)
         assert_equal @db, node1.db
-        node2 = OSM::Node.new(89)
+        node2 = OSMLib::Element::Node.new(89)
         @db.add_node(node2)
         assert_equal @db, node2.db
         assert_nil node1.db
     end
 
     def test_overwrite_way
-        way1 = OSM::Way.new(89)
+        way1 = OSMLib::Element::Way.new(89)
         @db.add_way(way1)
         assert_equal @db, way1.db
-        way2 = OSM::Way.new(89)
+        way2 = OSMLib::Element::Way.new(89)
         @db.add_way(way2)
         assert_equal @db, way2.db
         assert_nil way1.db
     end
 
     def test_overwrite_relation
-        relation1 = OSM::Relation.new(89)
+        relation1 = OSMLib::Element::Relation.new(89)
         @db.add_relation(relation1)
         assert_equal @db, relation1.db
-        relation2 = OSM::Relation.new(89)
+        relation2 = OSMLib::Element::Relation.new(89)
         @db.add_relation(relation2)
         assert_equal @db, relation2.db
         assert_nil relation1.db
     end
 
     def test_way_node_objects
-        way = OSM::Way.new
-        assert_raise OSM::NoDatabaseError do
+        way = OSMLib::Element::Way.new
+        assert_raise OSMLib::Error::NoDatabaseError do
             way.node_objects
         end
         @db << way
         assert_equal [], way.node_objects
-        node = OSM::Node.new(19)
+        node = OSMLib::Element::Node.new(19)
         way.nodes << node.id
         @db << node
         assert_equal 19, way.nodes[0] 

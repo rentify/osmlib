@@ -1,25 +1,25 @@
-# Contains the OSM::StreamParser::Expat class.
+# Contains the OSMLib::Stream::Expat class.
 
 require 'rubygems'
 require 'xmlparser'
 
 # Namespace for modules and classes related to the OpenStreetMap project.
 module OSMLib
-  module StreamParser
+  module Stream
 
     # Stream parser for OpenStreetMap XML files using Expat.
-    class StreamParser::Expat < StreamParserBase
+    class Parser::Expat < OSMLib::Stream::ParserBase
 
       # Create new StreamParser object. Only argument is a hash.
       #
-      # call-seq: OSM::StreamParser.new(:filename => 'filename.osm')
-      #           OSM::StreamParser.new(:string => '...')
+      # call-seq: OSMLib::Stream::Parser.new(:filename => 'filename.osm')
+      #           OSMLib::Stream::Parser.new(:string => '...')
       #
       # The hash keys:
       #   :filename  => name of XML file
       #   :string    => XML string
-      #   :db        => an OSM::Database object
-      #   :callbacks => an OSM::Callbacks object (or more likely from a
+      #   :db        => an OSMLib::Database object
+      #   :callbacks => an OSMLib::Stream::Callbacks object (or more likely from a
       #   derived class)
       #                 if none was given a new OSM:Callbacks object is
       #                 created
@@ -37,7 +37,7 @@ module OSMLib
       end
 
       # Run the parser. Return value is the return value of the
-      # OSM::Callbacks#result method.
+      # OSMLib::Stream::Callbacks#result method.
       def parse
         @callbacks.on_start_document
         @parser.parse(@data) do |type, name, data|

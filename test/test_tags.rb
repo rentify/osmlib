@@ -1,11 +1,11 @@
 $: << 'lib'
-require File.join(File.dirname(__FILE__), '..', 'lib', 'osm',  'core', 'tags')
 require 'test/unit'
+require 'osmlib'
 
 class TestTags < Test::Unit::TestCase
 
     def setup
-        @tags = OSM::Tags.new
+        @tags = OSMLib::Element::Tags.new
         @tags['foo'] = 'bar'
     end
 

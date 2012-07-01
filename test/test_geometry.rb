@@ -1,17 +1,18 @@
 $: << 'lib'
-require File.join(File.dirname(__FILE__), '..', 'lib', 'osm',  'core', 'object')
 require 'test/unit'
+require 'osmlib'
+
 require 'rubygems'
 require 'geo_ruby'
 
 class TestGeometry < Test::Unit::TestCase
 
     def setup
-        @db = OSM::Database.new
+        @db = OSMLib::Database.new
     end
 
     def test_node_geometry
-        node = OSM::Node.new(1, nil, nil, 10.4, 40.3)
+        node = OSMLib::Element::Node.new(1, nil, nil, 10.4, 40.3)
         assert_kind_of GeoRuby::SimpleFeatures::Point, node.geometry
         assert_equal 10.4, node.geometry.lon
         assert_equal 40.3, node.geometry.lat
@@ -20,14 +21,14 @@ class TestGeometry < Test::Unit::TestCase
     end
 
     def test_node_geometry_nil
-        node = OSM::Node.new(1)
-        assert_raise OSM::GeometryError do
+        node = OSMLib::Element::Node.new(1)
+        assert_raise OSMLib::Error::GeometryError do
             node.geometry
         end
     end
 
     def test_node_shape
-        node = OSM::Node.new(1, nil, nil, 10.4, 40.3)
+        node = OSMLib::Element::Node.new(1, nil, nil, 10.4, 40.3)
         attrs = {'a' => 'b', 'c' => 'd'}
         shape = node.shape(node.point, attrs)
         assert_kind_of GeoRuby::Shp4r::ShpRecord, shape
@@ -37,65 +38,65 @@ class TestGeometry < Test::Unit::TestCase
     end
 
     def test_way_geometry_nil
-        way = OSM::Way.new(1)
-        assert_raise OSM::GeometryError do
+        way = OSMLib::Element::Way.new(1)
+        assert_raise OSMLib::Error::GeometryError do
             way.linestring
         end
-        assert_raise OSM::GeometryError do
+        assert_raise OSMLib::Error::GeometryError do
             way.polygon
         end
-        assert_raise OSM::GeometryError do
+        assert_raise OSMLib::Error::GeometryError do
             way.geometry
         end
 
     end
 
     def test_way_geometry_fail
-        way = OSM::Way.new(1)
-        way.nodes << OSM::Node.new.id << OSM::Node.new.id << OSM::Node.new.id
-        assert_raise OSM::NoDatabaseError do
+        way = OSMLib::Element::Way.new(1)
+        way.nodes << OSMLib::Element::Node.new.id << OSMLib::Element::Node.new.id << OSMLib::Element::Node.new.id
+        assert_raise OSMLib::Error::NoDatabaseError do
             way.linestring
         end
-        assert_raise OSM::NoDatabaseError do
+        assert_raise OSMLib::Error::NoDatabaseError do
             way.polygon
         end
-        assert_raise OSM::NoDatabaseError do
+        assert_raise OSMLib::Error::NoDatabaseError do
             way.geometry
         end
     end
 
     def test_way_geometry
-        @db << (way = OSM::Way.new(1))
-        @db << (node1 = OSM::Node.new(nil, nil, nil, 0, 0))
-        @db << (node2 = OSM::Node.new(nil, nil, nil, 0, 10))
-        @db << (node3 = OSM::Node.new(nil, nil, nil, 10, 10))
+        @db << (way = OSMLib::Element::Way.new(1))
+        @db << (node1 = OSMLib::Element::Node.new(nil, nil, nil, 0, 0))
+        @db << (node2 = OSMLib::Element::Node.new(nil, nil, nil, 0, 10))
+        @db << (node3 = OSMLib::Element::Node.new(nil, nil, nil, 10, 10))
 
-        assert_raise OSM::GeometryError do
+        assert_raise OSMLib::Error::GeometryError do
             way.linestring
         end
-        assert_raise OSM::GeometryError do
+        assert_raise OSMLib::Error::GeometryError do
             way.polygon
         end
-        assert_raise OSM::GeometryError do
+        assert_raise OSMLib::Error::GeometryError do
             way.geometry
         end
 
         way.nodes << node1.id
 
-        assert_raise OSM::GeometryError do
+        assert_raise OSMLib::Error::GeometryError do
             way.linestring
         end
-        assert_raise OSM::GeometryError do
+        assert_raise OSMLib::Error::GeometryError do
             way.polygon
         end
-        assert_raise OSM::GeometryError do
+        assert_raise OSMLib::Error::GeometryError do
             way.geometry
         end
 
         way.nodes << node2.id
 
         assert_kind_of GeoRuby::SimpleFeatures::LineString, way.linestring
-        assert_raise OSM::GeometryError do
+        assert_raise OSMLib::Error::GeometryError do
             way.polygon
         end
         assert_kind_of GeoRuby::SimpleFeatures::LineString, way.geometry
@@ -103,7 +104,7 @@ class TestGeometry < Test::Unit::TestCase
         way.nodes << node3.id
 
         assert_kind_of GeoRuby::SimpleFeatures::LineString, way.linestring
-        assert_raise OSM::NotClosedError do
+        assert_raise OSMLib::Error::NotClosedError do
             way.polygon
         end
         assert_kind_of GeoRuby::SimpleFeatures::LineString, way.geometry
@@ -114,8 +115,8 @@ class TestGeometry < Test::Unit::TestCase
     end
 
     def test_relation_geometry
-        rel = OSM::Relation.new
-        assert_raise OSM::NoGeometryError do
+        rel = OSMLib::Element::Relation.new
+        assert_raise OSMLib::Error::NoGeometryError do
             rel.geometry
         end
     end

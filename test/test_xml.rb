@@ -1,8 +1,9 @@
 $: << 'lib'
-require File.join(File.dirname(__FILE__), '..', 'lib', 'osm',  'core', 'object')
 require 'test/unit'
+require 'osmlib'
+
 require 'rexml/document'
-require 'rubygems'
+require 'rubygems' 
 require 'builder'
 
 # In this file we test the to_xml methods of all the different objects.
@@ -15,7 +16,7 @@ class TestXml < Test::Unit::TestCase
 
     # <tag k="foo" v="bar"/>
     def test_tags
-        tags = OSM::Tags.new
+        tags = OSMLib::Element::Tags.new
         tags['foo'] = 'bar'
         tags.to_xml(@doc)
 
@@ -29,7 +30,7 @@ class TestXml < Test::Unit::TestCase
 
     # <node id="-1"/>
     def test_node_empty
-        node = OSM::Node.new
+        node = OSMLib::Element::Node.new
         node.to_xml(@doc)
 
         rexml = REXML::Document.new(@out)
@@ -41,7 +42,7 @@ class TestXml < Test::Unit::TestCase
 
     # <node id="45" user="user" timestamp="2007-12-12T01:01:01Z" lon="10.0" lat="20.0"/>
     def test_node_with_data
-        node = OSM::Node.new(45, 'user', '2007-12-12T01:01:01Z', 10.0, 20.0)
+        node = OSMLib::Element::Node.new(45, 'user', '2007-12-12T01:01:01Z', 10.0, 20.0)
         node.to_xml(@doc)
 
         rexml = REXML::Document.new(@out)
@@ -60,7 +61,7 @@ class TestXml < Test::Unit::TestCase
     #   <tag k="name" v="Grand Hotel"/>
     # </node>
     def test_node_with_tags
-        node = OSM::Node.new
+        node = OSMLib::Element::Node.new
         node.add_tags('tourism' => 'hotel', 'name' => 'Grand Hotel')
         node.to_xml(@doc)
 
@@ -98,10 +99,10 @@ class TestXml < Test::Unit::TestCase
     #   <tag k="name" v="Harbour Street"/>
     # </way>
     def test_way
-        way = OSM::Way.new(4, 'foo', '2000-01-01T00:00:00Z')
+        way = OSMLib::Element::Way.new(4, 'foo', '2000-01-01T00:00:00Z')
         way.add_tags('highway' => 'residential', 'name' => 'Harbour Street')
-        way << OSM::Node.new(42)
-        way << OSM::Node.new(43)
+        way << OSMLib::Element::Node.new(42)
+        way << OSMLib::Element::Node.new(43)
         way.to_xml(@doc)
 
         rexml = REXML::Document.new(@out)
@@ -143,7 +144,7 @@ class TestXml < Test::Unit::TestCase
 
     # <member type="node" ref="18" role="foo"/>
     def test_member
-        member = OSM::Member.new('node', 18, 'foo')
+        member = OSMLib::Element::Member.new('node', 18, 'foo')
         member.to_xml(@doc)
 
         rexml = REXML::Document.new(@out)
@@ -157,10 +158,10 @@ class TestXml < Test::Unit::TestCase
 
     # <relation id="16" user="relator" timestamp="2000-01-01T00:00:00Z">
     #   <member type="way" ref="123" role="foo"/>
-    # </relation>
+    # </relation>OSMLib::Element::Tags
     def test_relation
-        relation = OSM::Relation.new(16, 'relator', '2000-01-01T00:00:00Z')
-        relation.members << OSM::Member.new('way', 123, 'foo')
+        relation = OSMLib::Element::Relation.new(16, 'relator', '2000-01-01T00:00:00Z')
+        relation.members << OSMLib::Element::Member.new('way', 123, 'foo')
         relation.to_xml(@doc)
 
         rexml = REXML::Document.new(@out)
@@ -183,10 +184,10 @@ class TestXml < Test::Unit::TestCase
     #   <relation id="-3"/>
     # </osm>
     def test_database
-        db = OSM::Database.new
-        db << OSM::Node.new
-        db << OSM::Way.new
-        db << OSM::Relation.new
+        db = OSMLib::Database.new
+        db << OSMLib::Element::Node.new
+        db << OSMLib::Element::Way.new
+        db << OSMLib::Element::Relation.new
         db.to_xml(@doc, 'test')
 
         rexml = REXML::Document.new(@out)

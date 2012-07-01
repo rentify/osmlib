@@ -1,4 +1,4 @@
-# Contains the OSM::API class
+# Contains the OSMLib::API::Client class
 
 require 'net/http'
 
@@ -6,16 +6,16 @@ module OSMLib
 
   module API
 
-    # The OSM::API class handles all calls to the OpenStreetMap API.
+    # The OSMLib::API::Client class handles all calls to the OpenStreetMap API.
     #
     # Usage:
-    #   require 'OSM/API'
+    #   require 'osmlib'
     #
-    #   @api = OSM::API.new
+    #   @api = OSMLib::API::Client.new
     #   node = @api.get_node(3437)
     #
     # In most cases you can use the more convenient methods on the
-    # OSM::Node, OSM::Way, or OSM::Relation objects.
+    # OSMLib::Element::Node, OSMLib::Element::Way, or OSMLib::Element::Relation objects.
     #
     class Client
 
@@ -38,16 +38,16 @@ module OSMLib
       # Get an object ('node', 'way', or 'relation') with specified ID
       # from API.
       #
-      # call-seq: get_object(type, id) -> OSM::Object
+      # call-seq: get_object(type, id) -> OSMLib::Element::Object
       #
       def get_object(type, id)
         raise ArgumentError.new("type needs to be one of 'node', 'way', and 'relation'") unless type =~ /^(node|way|relation)$/
         raise TypeError.new('id needs to be a positive integer') unless(id.kind_of?(Fixnum) && id > 0)
         response = get("#{type}/#{id}")
         check_response_codes(response)
-        parser = OSM::StreamParser.new(:string => response.body, :callbacks => OSM::ObjectListCallbacks.new)
+        parser = OSMLib::Stream::Parser.new(:string => response.body, :callbacks => OSMLib::Stream::ObjectListCallbacks.new)
         list = parser.parse
-        raise APITooManyObjects if list.size > 1
+        raise OSMLib::Error::APITooManyObjects if list.size > 1
         list[0]
       end
 
@@ -57,7 +57,7 @@ module OSMLib
 
       # Get a node with specified ID from API.
       #
-      # call-seq: get_node(id) -> OSM::Node
+      # call-seq: get_node(id) -> OSMLib::Element::Node
       #
       def get_node(id)
         get_object('node', id)
@@ -73,7 +73,7 @@ module OSMLib
 
       # Get a way with specified ID from API.
       #
-      # call-seq: get_node(id) -> OSM::Way
+      # call-seq: get_node(id) -> OSMLib::Element::Way
       #
       def get_way(id)
         get_object('way', id)
@@ -81,7 +81,7 @@ module OSMLib
 
       # Get a relation with specified ID from API.
       #
-      # call-seq: get_node(id) -> OSM::Relation
+      # call-seq: get_node(id) -> OSMLib::Element::Relation
       #
       def get_relation(id)
         get_object('relation', id)
@@ -89,7 +89,7 @@ module OSMLib
 
       # Get all ways using the node with specified ID from API.
       #
-      # call-seq: get_ways_using_node(id) -> Array of OSM::Way
+      # call-seq: get_ways_using_node(id) -> Array of OSMLib::Element::Way
       #
       def get_ways_using_node(id)
         api_call(id, "node/#{id}/ways")
@@ -98,7 +98,7 @@ module OSMLib
       # Get all relations which refer to the object of specified type and with specified ID from API.
       #
       # call-seq: get_relations_referring_to_object(type, id) -> Array
-      # of OSM::Relation
+      # of OSMLib::Element::Relation
       #
       def get_relations_referring_to_object(type, id)
         api_call_with_type(type, id, "#{type}/#{id}/relations")
@@ -107,16 +107,16 @@ module OSMLib
       # Get all historic versions of an object of specified type and
       # with specified ID from API.
       #
-      # call-seq: get_history(type, id) -> Array of OSM::Object
+      # call-seq: get_history(type, id) -> Array of OSMLib::Element::Object
       #
       def get_history(type, id)
         api_call_with_type(type, id, "#{type}/#{id}/history")
       end
 
       # Get all objects in the bounding box (bbox) given by the left, bottom, right, and top
-      # parameters. They will be put into a OSM::Database object which is returned.
+      # parameters. They will be put into a OSMLib::Database object which is returned.
       #
-      # call-seq: get_bbox(left, bottom, right, top) -> OSM::Database
+      # call-seq: get_bbox(left, bottom, right, top) -> OSMLib::Database
       #
       def get_bbox(left, bottom, right, top)
         raise TypeError.new('"left" value needs to be a number between -180 and 180') unless(left.kind_of?(Float) && left >= -180 && left <= 180)
@@ -125,21 +125,21 @@ module OSMLib
         raise TypeError.new('"top" value needs to be a number between -90 and 90') unless(top.kind_of?(Float) && top >= -90 && top <= 90)
         response = get("map?bbox=#{left},#{bottom},#{right},#{top}")
         check_response_codes(response)
-        db = OSM::Database.new
-        parser = OSM::StreamParser.new(:string => response.body, :db => db)
+        db = OSMLib::Database.new
+        parser = OSMLib::Stream::Parser.new(:string => response.body, :db => db)
         parser.parse
         db
       end
 
       # Get a changeset with specified ID from OpenstreetMap API
       #
-      # call-seq: get_changeset(id) -> OSM::Changeset
+      # call-seq: get_changeset(id) -> OSMLib::Element::Changeset
       #
       def get_changeset(id)
         raise TypeError.new('id needs to be a positive integer') unless(id.kind_of?(Integer) && id > 0)
         response = get("changeset/#{id}")
         check_response_codes(response)
-        OSM::Changeset.from_osm_xml(response.body)
+        OSMLib::Element::Changeset.from_osm_xml(response.body)
       end
 
       # Opens a changeset and returns its id. Tags for changeset is not implemented yet.
@@ -147,7 +147,7 @@ module OSMLib
       # call-seq: create_changeset( tags={} ) -> int
       #
       def create_changeset(tags = {})
-        osm_xml = OSM::Changeset.osm_xml_for_new_changeset(tags)
+        osm_xml = OSMLib::Element::Changeset.osm_xml_for_new_changeset(tags)
         response = put('changeset/create', osm_xml)
         check_response_codes(response)
         response
@@ -164,7 +164,7 @@ module OSMLib
         raise TypeError.new('id needs to be a positive integer') unless(id.kind_of?(Fixnum) && id > 0)
         response = get(path)
         check_response_codes(response)
-        parser = OSM::StreamParser.new(:string => response.body, :callbacks => OSM::ObjectListCallbacks.new)
+        parser = OSMLib::Stream::Parser.new(:string => response.body, :callbacks => OSMLib::Element::ObjectListCallbacks.new)
         parser.parse
       end
 
@@ -177,10 +177,10 @@ module OSMLib
       def check_response_codes(response)
         case response.code.to_i
         when 200 then return
-        when 404 then raise APINotFound
-        when 410 then raise APIGone
-        when 500 then raise APIServerError
-        else raise APIError
+        when 404 then raise OSMLib::Error::APINotFound
+        when 410 then raise OSMLib::Error::APIGone
+        when 500 then raise OSMLib::Error::APIServerError
+        else raise OSMLib::Error::APIError
         end
       end
 

@@ -1,6 +1,6 @@
 $: << 'lib'
-require File.join(File.dirname(__FILE__), '..', 'lib', 'osm', 'api', 'api')
 require 'test/unit'
+require 'osmlib'
 
 require 'net/http'
 
@@ -159,9 +159,9 @@ end
 class TestAPI < Test::Unit::TestCase
 
   def setup
-    @api = OSM::API.new
+    @api = OSMLib::API::Client.new
 
-    @mapi = OSM::API.new('http://mock/')
+    @mapi = OSMLib::API::Client.new('http://mock/')
     def @mapi.get(suffix)
       MockHTTPGetResponse.new(suffix)
     end
@@ -171,13 +171,13 @@ class TestAPI < Test::Unit::TestCase
   end
 
   def test_create_std
-    assert_kind_of OSM::API, @api
+    assert_kind_of OSMLib::API::Client, @api
     assert_equal 'http://www.openstreetmap.org/api/0.6/', @api.instance_variable_get(:@base_uri)
   end
 
   def test_create_uri
-    api = OSM::API.new('http://localhost/')
-    assert_kind_of OSM::API, api
+    api = OSMLib::API::Client.new('http://localhost/')
+    assert_kind_of OSMLib::API::Client, api
     assert_equal 'http://localhost/', api.instance_variable_get(:@base_uri)
   end
 
@@ -200,7 +200,7 @@ class TestAPI < Test::Unit::TestCase
 
   def test_get_node_200
     node = @mapi.get_node(1)
-    assert_kind_of OSM::Node, node
+    assert_kind_of OSMLib::Element::Node, node
     assert_equal 1, node.id
     assert_equal '48.1', node.lat
     assert_equal '8.1', node.lon
@@ -208,25 +208,25 @@ class TestAPI < Test::Unit::TestCase
   end
 
   def test_get_node_too_many_objects
-    assert_raise OSM::APITooManyObjects do
+    assert_raise OSMLib::Error::APITooManyObjects do
       @mapi.get_node(2)
     end
   end
 
   def test_get_node_404
-    assert_raise OSM::APINotFound do
+    assert_raise OSMLib::Error::APINotFound do
       @mapi.get_node(404)
     end
   end
 
   def test_get_node_410
-    assert_raise OSM::APIGone do
+    assert_raise OSMLib::Error::APIGone do
       @mapi.get_node(410)
     end
   end
 
   def test_get_node_500
-    assert_raise OSM::APIServerError do
+    assert_raise OSMLib::Error::APIServerError do
       @mapi.get_node(500)
     end
   end
@@ -244,25 +244,25 @@ class TestAPI < Test::Unit::TestCase
 
   def test_get_way_200
     way = @mapi.get_way(1)
-    assert_kind_of OSM::Way, way
+    assert_kind_of OSMLib::Element::Way, way
     assert_equal 1, way.id
     assert_equal 'u', way.user
   end
 
   def test_get_way_404
-    assert_raise OSM::APINotFound do
+    assert_raise OSMLib::Error::APINotFound do
       @mapi.get_way(404)
     end
   end
 
   def test_get_way_410
-    assert_raise OSM::APIGone do
+    assert_raise OSMLib::Error::APIGone do
       @mapi.get_way(410)
     end
   end
 
   def test_get_way_500
-    assert_raise OSM::APIServerError do
+    assert_raise OSMLib::Error::APIServerError do
       @mapi.get_way(500)
     end
   end
@@ -280,25 +280,25 @@ class TestAPI < Test::Unit::TestCase
 
   def test_get_relation_200
     relation = @mapi.get_relation(1)
-    assert_kind_of OSM::Relation, relation
+    assert_kind_of OSMLib::Element::Relation, relation
     assert_equal 1, relation.id
     assert_equal 'u', relation.user
   end
 
   def test_get_relation_404
-    assert_raise OSM::APINotFound do
+    assert_raise OSMLib::Error::APINotFound do
       @mapi.get_relation(404)
     end
   end
 
   def test_get_relation_410
-    assert_raise OSM::APIGone do
+    assert_raise OSMLib::Error::APIGone do
       @mapi.get_relation(410)
     end
   end
 
   def test_get_relation_500
-    assert_raise OSM::APIServerError do
+    assert_raise OSMLib::Error::APIServerError do
       @mapi.get_relation(500)
     end
   end
@@ -323,7 +323,7 @@ class TestAPI < Test::Unit::TestCase
 
   def test_get_bbox
     db = @mapi.get_bbox(8.1, 48.1, 8.2, 48.2)
-    assert_kind_of OSM::Database, db
+    assert_kind_of OSMLib::Database, db
     assert_equal "48.1", db.get_node(1).lat
     assert_equal "8.2", db.get_node(2).lon
   end
@@ -352,7 +352,7 @@ class TestAPI < Test::Unit::TestCase
   def test_get_changeset_id_1
     changeset = @mapi.get_changeset(1)
 
-    assert_kind_of OSM::Changeset, changeset
+    assert_kind_of OSMLib::Element::Changeset, changeset
     assert_equal 1, changeset.id
     assert_equal 'u', changeset.user
     assert_equal 1, changeset.uid 

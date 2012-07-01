@@ -30,11 +30,11 @@ require 'rubygems'
 require 'webrick'
 require 'pathname'
 require 'builder'
-require 'OSM/API'
+require 'osmlib'
 
 PORT = 8008
 CSS = DATA.read
-BASE_URI = OSM::API::DEFAULT_BASE_URI
+BASE_URI = OSMLib::API::Client::DEFAULT_BASE_URI
 
 # Path: /robots.txt
 # Make sure robots don't use this to suck down the whole
@@ -129,7 +129,7 @@ class ObjServlet < IdBrowserServlet
     def initialize(config, type)
         super
         @type = type
-        @api = OSM::API.new
+        @api = OSMLib::API::Client.new
     end
 
     def html_for_tsu(x, object)
@@ -337,11 +337,11 @@ class ObjServlet < IdBrowserServlet
                 ['/history', 'history'],
                 ['/relations', 'relations']
             ]
-        rescue OSM::APIGone
+        rescue OSMLib::Error::APIGone
             warning = 'Deleted!'
             history = @api.get_history(@type, @id)
             xml = [ ['/history', 'history'] ]
-        rescue OSM::APINotFound
+        rescue OSMLib::Error::APINotFound
             warning = 'Does not exist and never has!'
             xml = []
         end

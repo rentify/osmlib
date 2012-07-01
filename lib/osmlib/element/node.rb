@@ -3,11 +3,11 @@ module OSMLib
 
     # OpenStreetMap Node.
     #
-    # To create a new OSM::Node object:
-    #   node = OSM::Node.new(17, 'someuser', '2007-10-31T23:48:54Z', 7.4, 53.2)
+    # To create a new OSMLib::Element::Node object:
+    #   node = OSMLib::Element::Node.new(17, 'someuser', '2007-10-31T23:48:54Z', 7.4, 53.2)
     #
     # To get a node from the API:
-    #   node = OSM::Node.from_api(17)
+    #   node = OSMLib::Element::Node.from_api(17)
     #
     class Node < OSMLib::Element::Object
 
@@ -53,7 +53,7 @@ module OSMLib
       #
       # The argument can be one of the following:
       #
-      # * If the argument is a Hash or an OSM::Tags object, those tags are added.
+      # * If the argument is a Hash or an OSMLib::Element::Tags object, those tags are added.
       # * If the argument is an Array the function is called recursively, i.e. all items in the Array are added.
       #
       # Returns the node to allow chaining.
@@ -73,19 +73,19 @@ module OSMLib
       end
 
       # Create object of class GeoRuby::SimpleFeatures::Point with the
-      # coordinates of this node.  Raises an OSM::GeometryError
+      # coordinates of this node.  Raises an OSMLib::Error::GeometryError
       # exception if the coordinates are not set.
       #
       # Only works if the GeoRuby library is loaded.
       #
       #   require 'rubygems'
       #   require 'geo_ruby'
-      #   geometry = OSM::Node.new(nil, nil, nil, 10.1, 20.2).point
+      #   geometry = OSMLib::Element::Node.new(nil, nil, nil, 10.1, 20.2).point
       #
       # call-seq: geometry ->  GeoRuby::SimpleFeatures::Point
       #
       def point
-        raise OSM::GeometryError.new("coordinates missing") if lon.nil? || lat.nil? || lon == '' || lat == ''
+        raise OSMLib::Error::GeometryError.new("coordinates missing") if lon.nil? || lat.nil? || lon == '' || lat == ''
         GeoRuby::SimpleFeatures::Point.from_lon_lat(lon.to_f, lat.to_f)
       end
 
@@ -97,9 +97,9 @@ module OSMLib
       #
       def to_s
         if @visible != nil
-          "#<OSM::Node id=\"#{@id}\" user=\"#{@user}\" timestamp=\"#{@timestamp}\" lon=\"#{@lon}\" lat=\"#{@lat}\" visible=\"#{@visible}\">"
+          "#<OSMLib::Element::Node id=\"#{@id}\" user=\"#{@user}\" timestamp=\"#{@timestamp}\" lon=\"#{@lon}\" lat=\"#{@lat}\" visible=\"#{@visible}\">"
         else
-          "#<OSM::Node id=\"#{@id}\" user=\"#{@user}\" timestamp=\"#{@timestamp}\" lon=\"#{@lon}\" lat=\"#{@lat}\">"
+          "#<OSMLib::Element::Node id=\"#{@id}\" user=\"#{@user}\" timestamp=\"#{@timestamp}\" lon=\"#{@lon}\" lat=\"#{@lat}\">"
         end
       end
 
@@ -113,11 +113,11 @@ module OSMLib
 
       # Get all ways using this node from the API.
       #
-      # The optional parameter is an OSM::API object. If none is specified
+      # The optional parameter is an OSMLib::API::Client object. If none is specified
       # the default OSM API is used.
       #
-      # Returns an array of OSM::Way objects.
-      def get_ways_using_node_from_api(api=OSM::API.new)
+      # Returns an array of OSMLib::Element::Way objects.
+      def get_ways_using_node_from_api(api=OSMLib::API::Client.new)
         api.get_ways_using_node(self.id.to_i)
       end
 

@@ -1,18 +1,18 @@
 $: << 'lib'
-require File.join(File.dirname(__FILE__), '..', 'lib', 'osm',  'core', 'object')
 require 'test/unit'
+require 'osmlib'
 
-class TestOSMObject < Test::Unit::TestCase
+class TestOSMLib < Test::Unit::TestCase
 
     def test_init
         assert_raise ArgumentError do
-            OSM::OSMObject.new()
+            OSMLib::Element::Object.new()
         end
         assert_raise ArgumentError do
-            OSM::OSMObject.new(17)
+            OSMLib::Element::Object.new(17)
         end
         assert_raise NotImplementedError do
-            OSM::OSMObject.new(17, 'user', '2000-01-01T00:00:00Z')
+            OSMLib::Element::Object.new(17, 'user', '2000-01-01T00:00:00Z')
         end
     end
 

@@ -1,15 +1,15 @@
 module OSMLib
-  module Elements
+  module Element
 
     # OpenStreetMap Way.
     #
-    # To create a new OSM::Way object:
-    #   way = OSM::Way.new(1743, 'user', '2007-10-31T23:51:17Z')
+    # To create a new OSMLib::Element::Way object:
+    #   way = OSMLib::Element::Way.new(1743, 'user', '2007-10-31T23:51:17Z')
     #
     # To get a way from the API:
-    #   way = OSM::Way.from_api(17)
+    #   way = OSMLib::Element::Way.from_api(17)
     #
-    class Way < OSMObject
+    class Way < OSMLib::Element::Object
 
       # Array of node IDs in this way.
       attr_reader :nodes
@@ -22,7 +22,7 @@ module OSMLib
       # timestamp:: Timestamp of last change
       # nodes:: Array of Node objects and/or node IDs
       def initialize(id=nil, user=nil, timestamp=nil, nodes=[], uid=-1, version=1, visible=nil)
-        @nodes = nodes.collect{ |node| node.kind_of?(OSM::Node) ? node.id : node }
+        @nodes = nodes.collect{ |node| node.kind_of?(OSMLib::Element::Node) ? node.id : node }
         super(id, user, timestamp, uid, version, visible)
       end
 
@@ -34,8 +34,8 @@ module OSMLib
       #
       # The argument can be one of the following:
       #
-      # * If the argument is a Hash or an OSM::Tags object, those tags
-      # * are added.  If the argument is an OSM::Node object, its ID
+      # * If the argument is a Hash or an OSMLib::Element::Tags object, those tags
+      # * are added.  If the argument is an OSMLib::Element::Node object, its ID
       # * is added to the list of node IDs.  If the argument is an
       # * Integer or String containing an Integer, this ID is added
       # * to the list of node IDs.  If the argument is an Array the
@@ -52,7 +52,7 @@ module OSMLib
           stuff.each do |item|
             self << item
           end
-        when OSM::Node
+        when OSMLib::Element::Node
           nodes << stuff.id
         when String
           nodes << stuff.to_i
@@ -77,12 +77,12 @@ module OSMLib
 
       # Return an Array with all the node objects that are part of this way.
       #
-      # Only works if the way and nodes are part of an OSM::Database.
+      # Only works if the way and nodes are part of an OSMLib::Database.
       #
-      # call-seq: node_objects -> Array of OSM::Node objects
+      # call-seq: node_objects -> Array of OSMLib::Element::Node objects
       #
       def node_objects
-        raise OSM::NoDatabaseError.new("can't get node objects if the way is not in a OSM::Database") if @db.nil?
+        raise OSMLib::Error::NoDatabaseError.new("can't get node objects if the way is not in a OSMLib::Database") if @db.nil?
         nodes.collect do |id|
           @db.get_node(id)
         end
@@ -90,36 +90,36 @@ module OSMLib
 
       # Create object of class GeoRuby::SimpleFeatures::LineString with the
       # coordinates of the node in this way.
-      # Raises a OSM::GeometryError exception if the way contain less than
-      # two nodes. Raises an OSM::NoDatabaseError exception if this way
-      # is not associated with an OSM::Database.
+      # Raises a OSMLib::Error::GeometryError exception if the way contain less than
+      # two nodes. Raises an OSMLib::Error::NoDatabaseError exception if this way
+      # is not associated with an OSMLib::Database.
       #
       # Only works if the GeoRuby library is loaded.
       #
       # call-seq: linestring ->  GeoRuby::SimpleFeatures::LineString or nil
       #
       def linestring
-        raise OSM::GeometryError.new("way with less then two nodes can't be turned into a linestring") if nodes.size < 2
-        raise OSM::NoDatabaseError.new("can't create LineString from way if the way is not in a OSM::Database") if @db.nil?
+        raise OSMLib::Error::GeometryError.new("way with less then two nodes can't be turned into a linestring") if nodes.size < 2
+        raise OSMLib::Error::NoDatabaseError.new("can't create LineString from way if the way is not in a OSMLib::Database") if @db.nil?
         GeoRuby::SimpleFeatures::LineString.from_coordinates(node_objects.collect{ |node| [node.lon.to_f, node.lat.to_f] })
       end
 
       # Create object of class GeoRuby::SimpleFeatures::Polygon with
       # the coordinates of the node in this way.
-      # Raises a OSM::GeometryError exception if the way contain less
+      # Raises a OSMLib::Error::GeometryError exception if the way contain less
       # than three nodes.
-      # Raises an OSM::NoDatabaseError exception if this way is not
-      # associated with an OSM::Database.
-      # Raises an OSM::NotClosedError exception if this way is not closed.
+      # Raises an OSMLib::Error::NoDatabaseError exception if this way is not
+      # associated with an OSMLib::Database.
+      # Raises an OSMLib::Error::NotClosedError exception if this way is not closed.
       #
       # Only works if the GeoRuby library is loaded.
       #
       # call-seq: polygon ->  GeoRuby::SimpleFeatures::Polygon or nil
       #
       def polygon
-        raise OSM::GeometryError.new("way with less then three nodes can't be turned into a polygon") if nodes.size < 3
-        raise OSM::NoDatabaseError.new("can't create Polygon from way if the way is not in a OSM::Database") if @db.nil?
-        raise OSM::NotClosedError.new("way is not closed so it can't be represented as Polygon") unless is_closed?
+        raise OSMLib::Error::GeometryError.new("way with less then three nodes can't be turned into a polygon") if nodes.size < 3
+        raise OSMLib::Error::NoDatabaseError.new("can't create Polygon from way if the way is not in a OSMLib::Database") if @db.nil?
+        raise OSMLib::Error::NotClosedError.new("way is not closed so it can't be represented as Polygon") unless is_closed?
         GeoRuby::SimpleFeatures::Polygon.from_coordinates([node_objects.collect{ |node| [node.lon.to_f, node.lat.to_f] }])
       end
 
@@ -140,9 +140,9 @@ module OSMLib
       #
       def to_s
         if @visible == nil
-          "#<OSM::Way id=\"#{@id}\" user=\"#{@user}\" timestamp=\"#{@timestamp}\">"
+          "#<OSMLib::Element::Way id=\"#{@id}\" user=\"#{@user}\" timestamp=\"#{@timestamp}\">"
         else
-          "#<OSM::Way id=\"#{@id}\" user=\"#{@user}\" timestamp=\"#{@timestamp}\" visible=\"#{@visible}\">"
+          "#<OSMLib::Element::Way id=\"#{@id}\" user=\"#{@user}\" timestamp=\"#{@timestamp}\" visible=\"#{@visible}\">"
         end
       end
 

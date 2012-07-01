@@ -1,43 +1,17 @@
-require 'OSM/objects'
-require 'OSM/Database'
-
-# Namespace for modules and classes related to the OpenStreetMap project.
 module OSMLib
-  module StreamParser
-
-    @@XMLPARSER = ENV['OSMLIB_XML_PARSER'] || 'REXML'
-
-    def self.XMLParser
-      @@XMLPARSER
-    end
-
-    if OSM.XMLParser == 'REXML'
-      require 'rexml/parsers/sax2parser'
-      require 'rexml/sax2listener'
-    elsif OSM.XMLParser == 'Libxml'
-      require 'rubygems'
-      begin
-        require 'xml/libxml'
-      rescue LoadError
-        require 'libxml'
-      end
-    elsif OSM.XMLParser == 'Expat'
-      require 'rubygems'
-      require 'xmlparser'
-    end
-
-    # This exception is raised by OSM::StreamParser when the OSM file
+  module Stream
+    
+    # This exception is raised by OSMLib::Stream::Parser when the OSM file
     # has an unknown version.
-    class VersionError < StandardError
-    end
+    class VersionError < StandardError; end
 
     # This exception is raised when you try to use an unknown XML parser
     # by setting the environment variable OSMLIB_XML_PARSER to an unknown
     # value.
-    class UnknownParserError < StandardError
-    end
+    class UnknownParserError < StandardError; end
+    
 
-    # Implements the callbacks called by OSM::StreamParser while parsing
+    # Implements the callbacks called by OSMLib::Stream::Parser while parsing
     # the OSM XML file.
     #
     # To create your own behaviour, create a subclass of this class and
@@ -54,7 +28,7 @@ module OSMLib
     #
     class Callbacks
 
-      case OSM.XMLParser
+      case OSMLib::Stream.XMLParser
       when 'REXML' then include REXML::SAX2Listener
       when 'Libxml' then include XML::SaxParser::Callbacks
       when 'Expat' then
@@ -62,33 +36,33 @@ module OSMLib
         raise UnknownParserError
       end
 
-      # the OSM::Database used to store objects in
+      # the OSMLib::Database used to store objects in
       attr_accessor :db
 
       # Overwrite this in a derived class. The default behaviour is to
-      # do nothing but to store all node objects in a OSM::Database if
-      # one was supplied when creating the OSM::StreamParser object.
+      # do nothing but to store all node objects in a OSMLib::Database if
+      # one was supplied when creating the OSMLib::Stream::Parser object.
       def node(node)
         true
       end
 
       # Overwrite this in a derived class. The default behaviour is to
-      # do nothing but to store all way objects in a OSM::Database
-      # if one was supplied when creating the OSM::StreamParser
+      # do nothing but to store all way objects in a OSMLib::Database
+      # if one was supplied when creating the OSMLib::Stream::Parser
       # object.
       def way(way)
         true
       end
 
       # Overwrite this in a derived class. The default behaviour is to
-      # do nothing but to store all relation objects in a OSM::Database
-      # if one was supplied when creating the OSM::StreamParser object.
+      # do nothing but to store all relation objects in a OSMLib::Database
+      # if one was supplied when creating the OSMLib::Stream::Parser object.
       def relation(relation)
         true
       end
 
       # Overwrite this in a derived class. Whatever this method returns
-      # will be returned from the OSM::StreamParser#parse method.
+      # will be returned from the OSMLib::Stream::Parser#parse method.
       def result
       end
 
@@ -135,12 +109,12 @@ module OSMLib
       def _start_osm(attr_hash)
         @context = nil
         if attr_hash['version'] != '0.5' && attr_hash['version'] != '0.6'
-          raise OSM::VersionError, 'OSM::StreamParser only understands OSM file version 0.5 and 0.6'
+          raise OSMLib::Error::VersionError, 'OSMLib::Stream::Parser only understands OSM file version 0.5 and 0.6'
         end
       end
 
       def _start_node(attr_hash)
-        @context = OSM::Node.new(attr_hash['id'], attr_hash['user'], attr_hash['timestamp'], attr_hash['lon'], attr_hash['lat'])
+        @context = OSMLib::Element::Node.new(attr_hash['id'], attr_hash['user'], attr_hash['timestamp'], attr_hash['lon'], attr_hash['lat'])
       end
 
       def _end_node()
@@ -149,7 +123,7 @@ module OSMLib
       end
 
       def _start_way(attr_hash)
-        @context = OSM::Way.new(attr_hash['id'], attr_hash['user'], attr_hash['timestamp'])
+        @context = OSMLib::Element::Way.new(attr_hash['id'], attr_hash['user'], attr_hash['timestamp'])
       end
 
       def _end_way()
@@ -158,7 +132,7 @@ module OSMLib
       end
 
       def _start_relation(attr_hash)
-        @context = OSM::Relation.new(attr_hash['id'], attr_hash['user'], attr_hash['timestamp'])
+        @context = OSMLib::Element::Relation.new(attr_hash['id'], attr_hash['user'], attr_hash['timestamp'])
       end
 
       def _end_relation()
@@ -179,7 +153,7 @@ module OSMLib
       end
 
       def _member(attr_hash)
-        new_member = OSM::Member.new(attr_hash['type'], attr_hash['ref'], attr_hash['role'])
+        new_member = OSMLib::Element::Member.new(attr_hash['type'], attr_hash['ref'], attr_hash['role'])
         if respond_to?(:member)
           return unless member(@context, new_member)
         end
@@ -188,12 +162,12 @@ module OSMLib
 
     end    
 
-    # This callback class for OSM::StreamParser collects all objects
-    # found in the XML in an array and the OSM::StreamParser#parse
+    # This callback class for OSMLib::Stream::Parser collects all objects
+    # found in the XML in an array and the OSMLib::Stream::Parser#parse
     # method returns this array.
     #
-    #   cb = OSM::ObjectListCallbacks.new
-    #   parser = OSM::StreamParser.new(:filename => 'filename.osm', :callbacks => cb)
+    #   cb = OSMLib::Element::ObjectListCallbacks.new
+    #   parser = OSMLib::Stream::Parser.new(:filename => 'filename.osm', :callbacks => cb)
     #   objects = parser.parse
     #
     class ObjectListCallbacks < Callbacks
@@ -248,21 +222,21 @@ module OSMLib
       end
 
       def start_document
-        @change = OSM::Change.new
+        @change = OSMLib::OSMChange::Change.new
       end
 
       def _start_create
-        @action = OSM::Action.new(:create)
+        @action = OSMLib::OSMChange::Action.new(:create)
         @list = []
       end
 
       def _start_modify
-        @action = OSM::Action.new(:modify)
+        @action = OSMLib::OSMChange::Action.new(:modify)
         @list = []
       end
 
       def _start_delete
-        @action = OSM::Action.new(:delete)
+        @action = OSMLib::OSMChange::Action.new(:delete)
         @list = []
       end
 
@@ -278,67 +252,6 @@ module OSMLib
       end
     end
 
-    # This is the base class for the OSM::StreamParser::REXML,
-    # OSM::StreamParser::Libxml, and OSM::StreamParser::Expat
-    # classes. Do not instantiate this class!
-    class StreamParserBase
-
-      # Byte position within the input stream. This is only updated by
-      # the Expat parser.
-      attr_reader :position
-
-      def initialize(options) # :nodoc:
-        @filename = options[:filename]
-        @string = options[:string]
-        @db = options[:db]
-        @context = nil
-        @position = 0
-
-        if (@filename.nil? && @string.nil?) || ((!@filename.nil?) && (!@string.nil?))
-          raise ArgumentError.new('need either :filename or :string argument')
-        end
-
-        @callbacks = options[:callbacks].nil? ? OSM::Callbacks.new : options[:callbacks]
-        @callbacks.db = @db
-      end
-
-    end
-
-    # Class to parse XML files. This is a factory class. When calling
-    # OSM::StreamParser.new() an object of one of the following
-    # classes is created and returned: OSM::StreamParser::REXML,
-    # OSM::StreamParser::Libxml, OSM::StreamParser::Expat.
-    #
-    # Usage:
-    #   ENV['OSMLIB_XML_PARSER'] = 'Libxml'
-    #   require 'OSM/StreamParser'
-    #   parser = OSM::Streamparser.new(:filename => 'file.osm')
-    #   result = parser.parse
-    #
-    class StreamParser
-
-      # Create new StreamParser object. Only argument is a hash.
-      #
-      # call-seq: OSM::StreamParser.new(:filename => 'filename.osm')
-      #           OSM::StreamParser.new(:string => '...')
-      #
-      # The hash keys:
-      #   :filename  => name of XML file
-      #   :string    => XML string
-      #   :db        => an OSM::Database object
-      #   :callbacks => an OSM::Callbacks object (or more likely from a derived class)
-      #                 if none was given a new OSM:Callbacks object is created
-      #
-      # You can only use :filename or :string, not both.
-      def self.new(options)
-        eval "OSM::StreamParser::#{OSM.XMLParser}.new(options)"
-      end
-
-    end
 
   end
 end
-
-require "OSM/StreamParser/#{OSM.XMLParser}"
-
-

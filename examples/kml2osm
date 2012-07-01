@@ -37,10 +37,9 @@ require 'builder'
 require 'rexml/document'
 
 $: << 'lib' << '../lib'
-require 'OSM/objects'
-require 'OSM/Database'
+require 'omslib'
 
-db = OSM::Database.new
+db = OSMLib::Database.new
 
 nodes_by_coordinate = Hash.new
 
@@ -49,9 +48,9 @@ doc = REXML::Document.new(ARGF)
 REXML::XPath.each(doc, '//Placemark') do |placemark|
 
     if REXML::XPath.first(placemark, 'Point')
-        new_object = OSM::Node.new
+        new_object = OSMLib::Element::Node.new
     else
-        new_object = OSM::Way.new
+        new_object = OSMLib::Element::Way.new
     end
     db << new_object
 
@@ -71,17 +70,17 @@ REXML::XPath.each(doc, '//Placemark') do |placemark|
     end
 
     case new_object
-        when OSM::Node
+        when OSMLib::Element::Node
             (lon, lat, height) = REXML::XPath.first(placemark, 'Point/coordinates').text.split(',')
             new_object.lon = lon
             new_object.lat = lat
-        when OSM::Way
+        when OSMLib::Element::Way
             REXML::XPath.first(placemark, './/coordinates').text.split(' ').each do |c|
                 (lon, lat, height) = c.split(',')
 
                 node = nodes_by_coordinate["#{lon}:#{lat}"]
                 if node.nil?
-                    node = OSM::Node.new(nil, nil, nil, lon, lat)
+                    node = OSMLib::Element::Node.new(nil, nil, nil, lon, lat)
                     nodes_by_coordinate["#{lon}:#{lat}"] = node
                     db << node
                 end

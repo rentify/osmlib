@@ -9,7 +9,7 @@
 #
 #-----------------------------------------------------------------------------
 #
-#  This is an example on how to use the OSM::API.get_bbox method. Call
+#  This is an example on how to use the OSMLib::API::Client.get_bbox method. Call
 #  this script with the bbox parameters:
 #
 #  get_bbox <left> <bottom> <right> <top>
@@ -26,15 +26,14 @@
 #-----------------------------------------------------------------------------
 
 $: << 'lib' << '../lib'
-require 'OSM/API'
-require 'OSM/Database'
+require 'osmlib'
 
 if ARGV.size != 4
     STDERR.puts "Usage: get_bbox <left> <bottom> <right> <top>"
     exit 1
 end
 
-@api = OSM::API.new
+@api = OSMLib::API::Client.new
 
 db = @api.get_bbox(Float(ARGV[0]), Float(ARGV[1]), Float(ARGV[2]), Float(ARGV[3]))
 

@@ -1,5 +1,5 @@
 module OSMLib
-  module Tags
+  module Element
 
     # A collection of OSM tags which can be attached to a Node, Way,
     # or Relation.

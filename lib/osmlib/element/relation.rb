@@ -1,15 +1,15 @@
 module OSMLib
-  module Elements
+  module Element
 
     # OpenStreetMap Relation.
     #
-    # To create a new OSM::Relation object:
-    #   relation = OSM::Relation.new(331, 'user', '2007-10-31T23:51:53Z')
+    # To create a new OSMLib::Element::Relation object:
+    #   relation = OSMLib::Element::Relation.new(331, 'user', '2007-10-31T23:51:53Z')
     #
     # To get a relation from the API:
-    #   relation = OSM::Relation.from_api(17)
+    #   relation = OSMLib::Element::Relation.from_api(17)
     #
-    class Relation < OSMObject
+    class Relation < OSMLib::Element::Object
 
       # Array of Member objects
       attr_reader :members
@@ -30,8 +30,8 @@ module OSMLib
       #
       # The argument can be one of the following:
       #
-      # * If the argument is a Hash or an OSM::Tags object, those tags are added.
-      # * If the argument is an OSM::Member object, it is added to the relation
+      # * If the argument is a Hash or an OSMLib::Element::Tags object, those tags are added.
+      # * If the argument is an OSMLib::Element::Member object, it is added to the relation
       # * If the argument is an Array the function is called recursively, i.e. all items in the Array are added.
       #
       # Returns the relation to allow chaining.
@@ -44,7 +44,7 @@ module OSMLib
           stuff.each do |item|
             self << item
           end
-        when OSM::Member
+        when OSMLib::Element::Member
           members << stuff
         else
           tags.merge!(stuff)
@@ -58,20 +58,20 @@ module OSMLib
       # that do have a geometry (such as Multipolygon relations) and do
       # the right thing.
       def geometry
-        raise NoGeometryError.new("Relations don't have a geometry")
+        raise OSMLib::Error::NoGeometryError.new("Relations don't have a geometry")
       end
 
       # Returns a polygon made up of all the ways in this relation. This
       # works only if it is tagged with 'polygon' or 'multipolygon'.
       def polygon
-        raise OSM::NoDatabaseError.new("can't create Polygon from relation if it is not in a OSM::Database") if @db.nil?
-        raise OSM::NoDatabaseError.new("can't create Polygon from relation if it does not represent a polygon") if self['type'] != 'multipolygon' and self['type'] != 'polygon'
+        raise OSMLib::Error::NoDatabaseError.new("can't create Polygon from relation if it is not in a OSMLib::Database") if @db.nil?
+        raise OSMLib::Error::NoDatabaseError.new("can't create Polygon from relation if it does not represent a polygon") if self['type'] != 'multipolygon' and self['type'] != 'polygon'
 
         c = []
         member_objects.each do |way|
-          raise TypeError.new("member is not a way so it can't be represented as Polygon") unless way.kind_of? OSM::Way
-          raise OSM::NotClosedError.new("way is not closed so it can't be represented as Polygon") unless way.is_closed?
-          raise OSM::GeometryError.new("way with less then three nodes can't be turned into a polygon") if way.nodes.size < 3
+          raise TypeError.new("member is not a way so it can't be represented as Polygon") unless way.kind_of? OSMLib::Element::Way
+          raise OSMLib::Error::NotClosedError.new("way is not closed so it can't be represented as Polygon") unless way.is_closed?
+          raise OSMLib::Error::GeometryError.new("way with less then three nodes can't be turned into a polygon") if way.nodes.size < 3
           c << way.node_objects.collect{ |node| [node.lon.to_f, node.lat.to_f] }
         end
         GeoRuby::SimpleFeatures::Polygon.from_coordinates(c)
@@ -85,7 +85,7 @@ module OSMLib
           when :way,      'way'      then @db.get_way(member.ref)
           when :relation, 'relation' then @db.get_relation(member.ref)
           end
-          raise OSM::NotFoundError.new("not in database: #{member.type} #{member.ref}") unless obj
+          raise OSMLib::Error::NotFoundError.new("not in database: #{member.type} #{member.ref}") unless obj
           obj
         end
       end
@@ -96,16 +96,16 @@ module OSMLib
       #
       def to_s
         if @visible == nil
-          "#<OSM::Relation id=\"#{@id}\" user=\"#{@user}\" timestamp=\"#{@timestamp}\">"
+          "#<OSMLib::Element::Relation id=\"#{@id}\" user=\"#{@user}\" timestamp=\"#{@timestamp}\">"
         else
-          "#<OSM::Relation id=\"#{@id}\" user=\"#{@user}\" timestamp=\"#{@timestamp}\" visible=\"#{@visible}\">"
+          "#<OSMLib::Element::Relation id=\"#{@id}\" user=\"#{@user}\" timestamp=\"#{@timestamp}\" visible=\"#{@visible}\">"
         end
       end
 
       # Return the member with a specified type and id. Returns nil
       # if not found.
       #
-      # call-seq: member(type, id) -> OSM::Member
+      # call-seq: member(type, id) -> OSMLib::Element::Member
       #
       def member(type, id)
         members.select{ |member| member.type == type && member.ref == id }[0]

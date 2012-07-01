@@ -20,11 +20,12 @@ module OSMLib
 end
 
 
+# Modules for this gem
+
 require 'osmlib/version'
-require 'osmlib/element/object'
-require 'osmlib/element/tags'
-require 'osmlib/element/node'
-require 'osmlib/element/way'
-require 'osmlib/element/relation'
-require 'osmlib/element/changeset'
-require "osmlib/stream_parser/stream_parser"
+require 'osmlib/api'
+require 'osmlib/database'
+require 'osmlib/element'
+require 'osmlib/error'
+require 'osmlib/osmchange'
+require 'osmlib/stream'

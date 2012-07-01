@@ -1,29 +1,7 @@
 module OSMLib
   module Element
 
-    # This error is raised when an object is not associated with a
-    # OSM::Database but database access is needed.
-    class NoDatabaseError < StandardError
-    end
 
-    # This error is raised when a way that should be closed (i.e.
-    # first node equals last node) but isn't.
-    class NotClosedError < StandardError
-    end
-
-    # This error is raised when an OSM object is not associated with a
-    # geometry.
-    class NoGeometryError < StandardError
-    end
-
-    # This error is raised when an OSM object can't be turned into
-    # a proper geometry. Happens if way has not enough nodes.
-    class GeometryError < StandardError
-    end
-
-    # An object was not found in the database.
-    class NotFoundError < StandardError
-    end
 
     # This is a virtual parent class for the OSM objects Node, Way and
     # Relation.
@@ -60,17 +38,17 @@ module OSMLib
       # If this object is visible (ie if it's deleted or not)
       attr_reader :visible
 
-      # The OSM::Database this object is in (if any)
+      # The OSMLib::Database this object is in (if any)
       attr_accessor :db
 
-      # Get OSM::OSMObject from API
-      def self.from_api(id, api=OSM::API.new) #:nodoc:
-        raise NotImplementedError.new('OSMObject is a virtual base class for the Node, Way, and Relation classes') if self.class == OSMLib::Element::Object
+      # Get OSMLib::Element::Object from API
+      def self.from_api(id, api=OSMLib::API::Client.new) #:nodoc:
+        raise NotImplementedError.new('OSMLib::Element::Object is a virtual base class for the Node, Way, and Relation classes') if self.class == OSMLib::Element::Object
         api.get_object(type, id)
       end
 
       def initialize(id, user, timestamp, uid=-1, version=1, visible=nil) #:nodoc:
-        raise NotImplementedError.new('OSMObject is a virtual base class for the Node, Way, and Relation classes') if self.class == OSMLib::Element::Object
+        raise NotImplementedError.new('OSMLib::Element::Object is a virtual base class for the Node, Way, and Relation classes') if self.class == OSMLib::Element::Object
 
         @id = id.nil? ? _next_id : _check_id(id)
         @version = version
@@ -79,7 +57,7 @@ module OSMLib
         @timestamp = _check_timestamp(timestamp) unless timestamp.nil?
         @visible = visible
         @db = nil
-        @tags = OSM::Tags.new
+        @tags = OSMLib::Element::Tags.new
       end
 
 
@@ -137,7 +115,7 @@ module OSMLib
 
       # Add one or more tags to this object.
       #
-      # call-seq: add_tags(Hash) -> OSMObject
+      # call-seq: add_tags(Hash) -> OSMLib::Element::Object
       #
       def add_tags(new_tags)
         new_tags.each do |k, v|
@@ -181,23 +159,23 @@ module OSMLib
 
       # Get all relations from the API that have his object as members.
       #
-      # The optional parameter is an OSM::API object. If none is specified
+      # The optional parameter is an OSMLib::API::Client object. If none is specified
       # the default OSM API is used.
       #
       # Returns an array of Relation objects or an empty array.
       #
-      def get_relations_from_api(api=OSM::API.new)
+      def get_relations_from_api(api=OSMLib::API::Client.new)
         api.get_relations_referring_to_object(type, self.id.to_i)
       end
 
       # Get the history of this object from the API.
       #
-      # The optional parameter is an OSM::API object. If none is specified
+      # The optional parameter is an OSMLib::API::Client object. If none is specified
       # the default OSM API is used.
       #
-      # Returns an array of OSM::Node, OSM::Way, or OSM::Relation objects
+      # Returns an array of OSMLib::Element::Node, OSMLib::Element::Way, or OSMLib::Element::Relation objects
       # with all the versions.
-      def get_history_from_api(api=OSM::API.new)
+      def get_history_from_api(api=OSMLib::API::Client.new)
         api.get_history(type, self.id.to_i)
       end
 
@@ -205,7 +183,7 @@ module OSMLib
       # instance obj.name is the same as obj.tags['name']. This works
       # for getting and setting tags.
       #
-      #   node = OSM::Node.new
+      #   node = OSMLib::Element::Node.new
       #   node.add_tags( 'highway' => 'residential', 'name' => 'Main Street' )
       #   node.highway                   #=> 'residential'
       #   node.highway = 'unclassified'  #=> 'unclassified'

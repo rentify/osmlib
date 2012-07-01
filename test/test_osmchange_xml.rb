@@ -1,6 +1,7 @@
 $: << 'lib'
-require File.join(File.dirname(__FILE__), '..', 'lib', 'osm',  'osmchange_format', 'change')
 require 'test/unit'
+require 'osmlib'
+
 require 'rexml/document'
 require 'rubygems'
 require 'builder'
@@ -14,7 +15,7 @@ class TestChangeXML < Test::Unit::TestCase
 
   def test_change_with_nodes
     
-    parser = OSM::StreamParser.new(:callbacks => OSM::ChangeCallbacks.new, :string => %q{<?xml version="1.0" encoding="UTF-8"?>
+    parser = OSMLib::Stream::Parser.new(:callbacks => OSMLib::Stream::ChangeCallbacks.new, :string => %q{<?xml version="1.0" encoding="UTF-8"?>
 <osmChange version="0.6" generator="TestSuite">
   <modify>
   <node id="17905203" version="3" lat="48.9614113" lon="8.3046066" user="test" uid="5" visible="true" changeset="94099" timestamp="2007-04-09T22:16:39+01:00">
@@ -28,9 +29,9 @@ class TestChangeXML < Test::Unit::TestCase
 </osmChange>
         })
     change = parser.parse
-    assert_kind_of OSM::Change, change
+    assert_kind_of OSMLib::OSMChange::Change, change
     assert_equal 2, change.actions.length
-    assert_kind_of OSM::Action, change.actions[0]
+    assert_kind_of OSMLib::OSMChange::Action, change.actions[0]
     assert_equal 2, change.actions[0].objects.length
     assert_equal 3, change.objects.length
     assert_equal 1, change.objects[0].tags.length
