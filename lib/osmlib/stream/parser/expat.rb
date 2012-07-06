@@ -1,9 +1,7 @@
-# Contains the OSMLib::Stream::Expat class.
 
 require 'rubygems'
 require 'xmlparser'
 
-# Namespace for modules and classes related to the OpenStreetMap project.
 module OSMLib
   module Stream
 

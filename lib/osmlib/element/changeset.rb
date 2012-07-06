@@ -1,6 +1,5 @@
 require 'xmlsimple'
 
-# Namespace for modules and classes related to the OpenStreetMap project.
 module OSMLib
   module Element
 

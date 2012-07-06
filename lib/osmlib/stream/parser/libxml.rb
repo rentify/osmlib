@@ -1,4 +1,3 @@
-# Contains the OSMLib::Stream::LibXML class.
 
 require 'rubygems'
 begin
@@ -7,7 +6,6 @@ rescue LoadError
   require 'libxml'
 end
 
-# Namespace for modules and classes related to the OpenStreetMap project.
 module OSMLib
   module Stream
 

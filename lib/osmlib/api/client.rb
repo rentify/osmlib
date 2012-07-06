@@ -1,5 +1,3 @@
-# Contains the OSMLib::API::Client class
-
 require 'net/http'
 
 module OSMLib

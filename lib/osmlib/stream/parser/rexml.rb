@@ -1,9 +1,7 @@
-# Contains the OSMLib::Stream::REXML class.
 
 require 'rexml/parsers/sax2parser'
 require 'rexml/sax2listener'
 
-# Namespace for modules and classes related to the OpenStreetMap project.
 module OSMLib
   module Stream
 
