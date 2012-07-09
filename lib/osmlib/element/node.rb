@@ -8,6 +8,9 @@ module OSMLib
     #
     # To get a node from the API:
     #   node = OSMLib::Element::Node.from_api(17)
+    # 
+    # To add tags to a node:
+    #   node << {'amenity' => 'parking', 'fee' => 'no' }
     #
     class Node < OSMLib::Element::Object
 
@@ -39,6 +42,12 @@ module OSMLib
       def lat=(lat)
         @lat = _check_lat(lat)
       end
+      
+      # True if lon in in [-180.0,180.0] and lat is in [-90.0,90.0]
+      def in_world?
+        ( @lon.to_f.between?( -180.0 , 180.0 ) and  @lat.to_f.between?( -180.0 ,180.0 ) ) ? true : false
+      end
+      
 
       # List of attributes for a Node
       def attribute_list

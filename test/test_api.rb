@@ -12,7 +12,7 @@ class MockHTTPGetResponse
 
   def initialize(suffix)
     case suffix
-    when 'node/1'
+    when 'node/1' # good api response, node with one tag 
       @code = 200
       @body = %q{<?xml version="1.0" encoding="UTF-8"?>
         <osm version="0.6" generator="OpenStreetMap server">
@@ -21,7 +21,7 @@ class MockHTTPGetResponse
         </node>
         </osm>
       }
-    when 'node/2'
+    when 'node/2' # bad response, too many nodes
       @code = 200
       @body = %q{<?xml version="1.0" encoding="UTF-8"?>
         <osm version="0.6" generator="OpenStreetMap server">
@@ -33,6 +33,16 @@ class MockHTTPGetResponse
         </node>
         </osm>
       }
+    when 'node/3' # good response, node with two tags
+      @code = 200
+      @body = %q{<?xml version="1.0" encoding="UTF-8"?>
+        <osm version="0.6" generator="OpenStreetMap server">
+        <node id="3" version="1" changeset="1" lat="2.5" lon="22.5" uid="1" user="u" visible="true" timestamp="2007-07-03T00:04:12+01:00">
+        <tag k="amenity" v="parking"/>
+        <tag k="fee" v="no"/>
+        </node>
+        </osm>
+      }  
     when 'way/1'
       @code = 200
       @body = %q{<?xml version="1.0" encoding="UTF-8"?>
@@ -126,12 +136,22 @@ class MockHTTPGetResponse
         </osm>
       }
 
+    when 'changeset/2'
+      @code = 200
+      @body = %q{<?xml version="1.0" encoding="UTF-8"?>
+        <osm version="0.6" generator="OpenStreetMap server">
+        <changeset id="2" user="u" uid="1" created_at="2011-05-18T12:38:17Z" closed_at="2011-05-18T12:38:19Z" open="false" min_lat="46.7733159" min_lon="23.5928252" max_lat="46.7733159" max_lon="23.5928252">
+        </changeset>
+        </osm>
+      }
+
     else
       raise ArgumentError.new("unknown parameter: '#{suffix}'")
     end
   end
 
 end
+
 
 class MockHTTPPutResponse
 
@@ -142,14 +162,33 @@ class MockHTTPPutResponse
     when 'changeset/create'
 
       # Using a fixed osm xml for changeset creation to easier testing
-      expected_put_data = %q{<?xml version='1.0' encoding='UTF-8'?><osm><changeset><tag k='created_by' v='my app'/><tag k='comments' v='added some points'/></changeset></osm>}
-      if (put_data == expected_put_data )
+      payload_data_with_tags = %q{<?xml version='1.0' encoding='UTF-8'?><osm><changeset><tag k='created_by' v='my app'/><tag k='comments' v='added some points'/></changeset></osm>}
+      payload_data_with_no_tags = %q{<?xml version='1.0' encoding='UTF-8'?><osm><changeset></changeset></osm>}
+
+      case put_data 
+      when payload_data_with_tags
         @code = 200
-        @body = '1' # return changeset number
+        @body = '1' 
+      when payload_data_with_no_tags
+        @code = 200
+        @body = '1' 
       else
         @code = 400 # bad request
         @body = ''
       end
+
+    when 'node/create'
+
+      # Using a fixed osm xml for easy testing
+      expected_payload_data = %q{<?xml version='1.0' encoding='UTF-8'?><osm><node changeset='1' lat='2.5' lon='22.5'><tag k='amenity' v='parking'><tag k='fee' v='no'></node></osm>}
+      if (put_data == expected_payload_data )
+        @code = 200
+        @body = '3' # return new node id
+      else
+        @code = 400 # bad request
+        @body = ''
+      end
+
     else
       raise ArgumentError.new("unknown parameter: '#{suffix}'")
     end
@@ -161,14 +200,22 @@ class TestAPI < Test::Unit::TestCase
   def setup
     @api = OSMLib::API::Client.new
 
+    # Alters some methods of OSMLib::API::Client to mimic API responses  
     @mapi = OSMLib::API::Client.new('http://mock/')
     def @mapi.get(suffix)
       MockHTTPGetResponse.new(suffix)
     end
     def @mapi.put(suffix, put_data)
       MockHTTPPutResponse.new(suffix, put_data)
-    end
+    end    
+
   end
+
+  # ------------------------------------------------------------------------------------------------
+  # 
+  # Tests for API reading
+  # 
+  # ------------------------------------------------------------------------------------------------
 
   def test_create_std
     assert_kind_of OSMLib::API::Client, @api
@@ -328,12 +375,6 @@ class TestAPI < Test::Unit::TestCase
     assert_equal "8.2", db.get_node(2).lon
   end
 
-  def test_create_changeset
-    response = @mapi.create_changeset({ "created_by" => "my app", "comments" => "added some points"})
-    changeset_id = response.body.to_i
-    assert changeset_id > 0
-  end
-
   def test_get_changeset_fail
     assert_raise TypeError do
       @mapi.get_changeset(-11)
@@ -365,6 +406,53 @@ class TestAPI < Test::Unit::TestCase
     assert_equal 23.5928252, changeset.max_lon    
   end
 
+  # ------------------------------------------------------------------------------------------------
+  # 
+  # Tests for API writing
+  # 
+  # ------------------------------------------------------------------------------------------------
+
+  def test_create_changeset
+    response = @mapi.create_changeset({ "created_by" => "my app", "comments" => "added some points"})
+    changeset_id = response.body.to_i
+    assert changeset_id > 0
+  end
+
+  # Test if API::Client can make a request for node creation.
+  def test_create_node_with_changeset_id
+
+    # Create node call
+    new_node_id = @mapi.create_node( 22.5, 2.5, {"amenity"=>"parking", "fee"=>"no"}, 1 )
+
+    # Get new node from API
+    new_node = @mapi.get_node( new_node_id )
+
+    # Test server response
+    assert_equal "22.5", new_node.lon
+    assert_equal "2.5",  new_node.lat
+    assert_equal 2,    new_node.tags.count
+    assert_equal 'no', new_node.tags['fee']
+
+
+  end
+
+  # Test when a node is created without a changeset number. API::Client should create a new changeset
+  # if it doesn't have one defined.
+  def test_create_node_without_changeset
+
+    # Create node call, without changeset id
+    new_node_id = @mapi.create_node( 22.5, 2.5, {"amenity"=>"parking", "fee"=>"no"} )
+
+    # Get new node from API
+    new_node = @mapi.get_node( new_node_id )
+    
+    # Test server response
+    assert_equal "22.5", new_node.lon
+    assert_equal "2.5",  new_node.lat
+    assert_equal 2,    new_node.tags.count
+    assert_equal 'no', new_node.tags['fee']
+
+  end  
 
 end
 

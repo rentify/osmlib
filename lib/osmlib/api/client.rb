@@ -4,7 +4,8 @@ module OSMLib
 
   module API
 
-    # The OSMLib::API::Client class handles all calls to the OpenStreetMap API.
+    # 
+    # Handles all calls to OpenStreetMap API.
     #
     # Usage:
     #   require 'osmlib'
@@ -12,21 +13,26 @@ module OSMLib
     #   @api = OSMLib::API::Client.new
     #   node = @api.get_node(3437)
     #
+    # For response results other than 200, this class will raise the following errors:
+    # 
+    # * OSMLib::Error::APINotFound for status code 404 (not found);
+    # * OSMLib::Error::APIGone for status code 410 (page gone);
+    # * OSMLib::Error::APIServerError for status code 500 (server error);
+    # * OSMLib::Error::APIError for others codes.
+    # 
     # In most cases you can use the more convenient methods on the
     # OSMLib::Element::Node, OSMLib::Element::Way, or OSMLib::Element::Relation objects.
     #
     class Client
 
-      # the default base URI for the API
-      DEFAULT_BASE_URI = 'http://www.openstreetmap.org/api/0.6/'
-
       attr_reader :username
       attr_reader :password
-
+      attr_reader :current_changeset
+      
       # Creates a new API object. Without any arguments it uses the
       # default API at DEFAULT_BASE_URI. If you want to use a different
       # API, give the base URI as parameter to this method.
-      def initialize( uri = DEFAULT_BASE_URI, username = nil, password = nil )
+      def initialize( uri = OSMLib::API::DEFAULT_BASE_URI, username = nil, password = nil )
 
         @base_uri = uri
         @username = username 
@@ -49,10 +55,6 @@ module OSMLib
         list[0]
       end
 
-      # ------------------------------------------------------------------------------------ 
-      #   Node API Calls
-      # ------------------------------------------------------------------------------------
-
       # Get a node with specified ID from API.
       #
       # call-seq: get_node(id) -> OSMLib::Element::Node
@@ -61,13 +63,6 @@ module OSMLib
         get_object('node', id)
       end
 
-      # Creates a new node. If no changeset id provided, osmlib will create a new changeset
-      # 
-      # call-seq: create_node(lat, lon, tags = {}, changeset_id = nil) -> new_node_id
-      # 
-      def create_node(lat, lon, tags = {}, changeset_id = nil)
-
-      end
 
       # Get a way with specified ID from API.
       #
@@ -149,6 +144,30 @@ module OSMLib
         response = put('changeset/create', osm_xml)
         check_response_codes(response)
         response
+      end
+      
+      # Creates a new node in OpenStreetMap databse. If no changeset id provided, osmlib will
+      # create a new changeset.
+      # 
+      # call-seq: create_node(lat, lon, tags = {}, changeset_id = nil) -> new_node_id
+      # 
+      def create_node( lon, lat, tags = {}, changeset_id = nil)
+        raise ArgumentError.new("Latitude should be between [-90,90]") unless lat.to_f.between?( -90.0, 90.0 )
+        raise ArgumentError.new("Longitude should be between [-180,180]") unless lon.to_f.between?( -180.0, 180.0)
+
+        # If no changeset is provided, use current or create a new one.
+        if not changeset_id then
+          response = create_changeset()
+          changeset_id = response.body.to_i
+        end
+
+        # Generate request payload
+        xml = OSMLib::API::XMLPayload.to_create_new_node( lon, lat, tags, changeset_id )
+
+        response = put('node/create', xml)
+        check_response_codes(response)
+
+        response.body.to_i
       end
 
       private
