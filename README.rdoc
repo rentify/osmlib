@@ -14,7 +14,7 @@ This gem has support to:
 - Parse OpenStreetMap XML files (.osm);
 - Parse OpenStreetMap Change files (.osc).
 
-=== Documentation: http://vgeorge.github.com/rgeo/rdoc
+=== Documentation: http://rubydoc.info/github/vgeorge/osmlib/
 
 === Dependencies
 
@@ -34,7 +34,7 @@ Users mailing list (Archives[http://rubyforge.org/pipermail/osmlib-user/]): osml
 
 Report issues: http://github.org/vgeorge/osmlib/issues
 
-OpenStreetMap Wiki (outdated): http://wiki.openstreetmap.org/wiki/Osmlib
+Wiki: http://wiki.openstreetmap.org/wiki/Osmlib
 
 === Development
 
