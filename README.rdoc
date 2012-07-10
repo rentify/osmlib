@@ -2,6 +2,17 @@
 
 OSMLib is library for handling OpenStreetMap data and API. This gem is a fork of 'osmlib-base' gem, originally developed by Jochen Topf.
 
+=== Installation
+
+The first version of this gem is heavy development and is not released yet. 
+
+To use this gem, install from source or add the following line to the Gemspec file:
+
+
+  gem 'osmlib', :git => 'git://github.com/vgeorge/osmlib-base.git'
+
+  
+
 === Summary
 
 OSMLib provides a way to integrate Ruby and Rails applications to OpenStreetMap.
@@ -14,7 +25,7 @@ This gem has support to:
 - Parse OpenStreetMap XML files (.osm);
 - Parse OpenStreetMap Change files (.osc).
 
-=== Documentation: http://rubydoc.info/github/vgeorge/osmlib/
+=== Documentation: http://rubydoc.info/github/vgeorge/osmlib
 
 === Dependencies
 
