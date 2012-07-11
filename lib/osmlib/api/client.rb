@@ -7,36 +7,52 @@ module OSMLib
     # 
     # Handles all calls to OpenStreetMap API.
     #
-    # Usage:
-    #   require 'osmlib'
+    # Basic usage:
     #
-    #   @api = OSMLib::API::Client.new
-    #   node = @api.get_node(3437)
+    #   api_client = OSMLib::API::Client.new
+    #   node = api_client.get_node(3437)
     #
-    # For response results other than 200, this class will raise the following errors:
+    # Provide username/password if you want to perform write requests to the API:
     # 
+    #   api_client = OSMLib::API::Client.new('', username = "osm_user", password = "osm_password")
+    # 
+    # You can use a password file too:
+    # 
+    #   api_client = OSMLib::API::Client.new('', '','', 'test/password_file')
+    # 
+    # After every call, the client will check responses, and if there are errors the following exceptions will be raised: 
+    # 
+    # * OSMLib::Error::APIUnauthorized for status code 401 (not found);
     # * OSMLib::Error::APINotFound for status code 404 (not found);
     # * OSMLib::Error::APIGone for status code 410 (page gone);
     # * OSMLib::Error::APIServerError for status code 500 (server error);
     # * OSMLib::Error::APIError for others codes.
     # 
-    # In most cases you can use the more convenient methods on the
-    # OSMLib::Element::Node, OSMLib::Element::Way, or OSMLib::Element::Relation objects.
-    #
+
     class Client
 
       attr_reader :username
       attr_reader :password
+      
+      # Keeps the id of changeset used in write calls, if any
       attr_reader :current_changeset
       
       # Creates a new API object. Without any arguments it uses the
       # default API at DEFAULT_BASE_URI. If you want to use a different
       # API, give the base URI as parameter to this method.
-      def initialize( uri = OSMLib::API::DEFAULT_BASE_URI, username = nil, password = nil )
+      def initialize( uri = OSMLib::API::DEFAULT_BASE_URI, username = nil, password = nil, passwordfile = nil )
 
         @base_uri = uri
+
         @username = username 
         @password = password 
+                
+        # TODO handle password files
+        if passwordfile then
+          credentials = open(passwordfile).readline().split(":")
+          @username = credentials[0].strip() 
+          @password = credentials[1].strip()
+        end
       end
 
       # Get an object ('node', 'way', or 'relation') with specified ID
@@ -177,7 +193,7 @@ module OSMLib
         api_call(id, path)
       end
 
-      def api_call(id, path)
+      def api_call(id, path)  
         raise TypeError.new('id needs to be a positive integer') unless(id.kind_of?(Fixnum) && id > 0)
         response = get(path)
         check_response_codes(response)
@@ -191,9 +207,20 @@ module OSMLib
         request.get(uri.request_uri)
       end
 
+      def put(suffix, body)
+        raise APIUnauthorized.new("Username should be provided to send data to API") unless :username
+        raise APIUnauthorized.new("Password should be provided to send data to API") unless :password
+        uri = URI.parse(@base_uri + suffix)
+        request = Net::HTTP.new(uri.host, uri.port)
+        request.basic_auth :username, :password
+        request.put(uri.request_uri, body)
+      end
+
+
       def check_response_codes(response)
         case response.code.to_i
         when 200 then return
+        when 401 then raise OSMLib::Error::APIUnauthorized
         when 404 then raise OSMLib::Error::APINotFound
         when 410 then raise OSMLib::Error::APIGone
         when 500 then raise OSMLib::Error::APIServerError

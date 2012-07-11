@@ -207,9 +207,32 @@ class TestAPI < Test::Unit::TestCase
     end
     def @mapi.put(suffix, put_data)
       MockHTTPPutResponse.new(suffix, put_data)
-    end    
+    end
+    
+
+    # Instanciates a API client hooked to development API server. 
+    @dev_api = OSMLib::API::Client.new(uri = OSMLib::API::DEFAULT_BASE_URI)
 
   end
+
+  # ------------------------------------------------------------------------------------------------  
+  # 
+  # Tests for API Client credentials handling
+  # 
+  # ------------------------------------------------------------------------------------------------
+  
+  def test_init_client_with_credentials_as_arguments
+    client = OSMLib::API::Client.new('', username = "osm_user", password = "osm_password")
+    assert_equal "osm_user", client.username
+    assert_equal "osm_password", client.password    
+  end
+
+  def test_init_client_with_credentials_as_passwd_file
+    client = OSMLib::API::Client.new('', '','', 'test/password_file')
+    assert_equal "test_user", client.username
+    assert_equal "test_password", client.password    
+  end
+
 
   # ------------------------------------------------------------------------------------------------
   # 
