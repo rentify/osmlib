@@ -2,28 +2,24 @@
 
 OSMLib is library for handling OpenStreetMap data and API. This gem is a fork of 'osmlib-base' gem, originally developed by Jochen Topf.
 
-=== Installation
+=== Modules
 
-The first version of this gem is heavy development and is not released yet. 
+This gem has the following modules:
+
+* OSMLib::Element is the base for handling Node, Way, Relation, Changeset and Tag elements.
+* OSMLib::API contains classes for interacting with OpenStreetMap API. 
+* OSMLib::Database provides a way to store OSM elements locally. 
+* OSMLib::OSMChange for parsing OSM Change files (.osc). 
+* OSMLib::Stream for parsing a regular OSM files  (.osm).
+
+=== Install
+
+The first version of this gem is under development and has not been released yet. 
 
 To use this gem, install from source or add the following line to the Gemspec file:
 
 
   gem 'osmlib', :git => 'git://github.com/vgeorge/osmlib-base.git'
-
-  
-
-=== Summary
-
-OSMLib provides a way to integrate Ruby and Rails applications to OpenStreetMap.
-
-This gem has support to:
-
-- Handling the basic elements of OpenStreetMap: Node, Way, Relation, Changeset;
-- Access the API;
-- Database object to locally store elements;
-- Parse OpenStreetMap XML files (.osm);
-- Parse OpenStreetMap Change files (.osc).
 
 === Documentation: http://rubydoc.info/github/vgeorge/osmlib
 
@@ -60,6 +56,18 @@ variable:
   OSMLIB_XML_PARSER=REXML rake test  # (default)
   OSMLIB_XML_PARSER=Libxml rake test
   OSMLIB_XML_PARSER=Expat rake test
+
+Part of the testing is done against OpenStreetMap Development API Server. 
+
+Follow there steps to properly setup access to the server:
+
+1. If you don't have yet, create a login at http://api06.dev.openstreetmap.org;
+2. Create a file name 'passwd' at gem root directory 'osmlib/'.
+3. Put username and password into the file, separated by a colon. 
+
+
+Example:
+  username:password
 
 === Authors
 
