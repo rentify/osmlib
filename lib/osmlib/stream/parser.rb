@@ -1,60 +1,60 @@
 
 module OSMLib
-  
+
   # === The Stream Parser
-  # 
+  #
   # To parse an OSM XML file create a subclass of OSMLib::Stream::Callbacks and
   # define the methods node(), way(), and relation() in it:
-  # 
+  #
   #   class MyCallbacks < OSMLib::Stream::Callbacks
-  # 
+  #
   #     def node(node)
   #        ...
   #     end
-  # 
+  #
   #     def way(way)
   #        ...
   #     end
-  # 
+  #
   #     def relation(relation)
   #        ...
   #     end
-  # 
+  #
   #   end
-  # 
+  #
   # Instantiate an object of this class and give it to a OSMLib::Stream::Parser:
-  # 
+  #
   #   require 'osmlib'
-  # 
+  #
   #   cb = MyCallbacks.new
   #   parser = OSMLib::Stream::Parser.new(:filename => 'filename.osm', :callbacks => cb)
   #   parser.parse
-  # 
+  #
   # The methods node(), way(), or relation() will be called whenever
   # the parser has parsed a complete node, way, or relation (i.e. after
   # all tags, nodes in a way, or members of a relation are available).
-  # 
+  #
   # There are several parser options available:
-  # 
+  #
   # * REXML (Default, slow, works on all machines, because it is part
   #   of the Ruby standard distribution)
   # * Libxml (Based on the C libxml2 library, faster than REXML, new
   #   version needed, sometimes hard to install)
   # * Expat (Based on C Expat library, faster than REXML)
-  # 
+  #
   # Since version 0.1.3 REXML is the default parser because many people
   # had problems with the C-based parser. Change the parser by setting
   # the environment variable OSMLIB_XML_PARSER to the parser you want
   # to use (before you require 'OSM/StreamParser'):
-  # 
+  #
   # From the shell:
   #     export OSMLIB_XML_PARSER=Libxml
-  # 
+  #
   # From ruby:
   #     ENV['OSMLIB_XML_PARSER']='Libxml'
-  #     require 'osmlib'   
-  # 
-  
+  #     require 'osmlib'
+  #
+
   module Stream
 
     @@XMLPARSER = ENV['OSMLIB_XML_PARSER'] || 'REXML'
@@ -139,4 +139,4 @@ module OSMLib
   end
 end
 
-require "osmlib/stream/parser/#{OSMLib::Stream.XMLParser}"
+require "osmlib/stream/parser/#{OSMLib::Stream.XMLParser.lowercase}"
