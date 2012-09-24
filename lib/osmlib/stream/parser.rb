@@ -139,4 +139,4 @@ module OSMLib
   end
 end
 
-require "osmlib/stream/parser/#{OSMLib::Stream.XMLParser.lowercase}"
+require "osmlib/stream/parser/#{OSMLib::Stream.XMLParser.downcase}"
